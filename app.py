@@ -2,7 +2,8 @@ import streamlit as st
 import requests
 import feedparser
 import os
-import plotly.graph_objects as px
+import plotly.express as px
+import plotly.graph_objects as go
 from datetime import datetime
 
 # ==========================================
@@ -107,24 +108,25 @@ def get_news():
         return [{"title": "新聞加載失敗。", "link": "#"}]
 
 def draw_radar_chart():
-    """繪製經典的個人能力與專案進度雷達圖"""
-    # 這裡的數據可以自由調整，對應你平常關注的維度
+    """繪製個人能力與專案進度雷達圖 (修復版)"""
     categories = ['專案執行力', '程式開發', '資訊吸收', '身心健康', '時間管理']
-    values = [85, 90, 75, 80, 70] # 當前進度
+    values = [85, 90, 75, 80, 70]
     
-    # 配合模式變換圖表顏色
     is_hacker = st.session_state.workspace_mode == "駭客模式 ⚡"
     line_color = '#00FF00' if is_hacker else '#FF4B4B'
     fill_color = 'rgba(0, 255, 0, 0.2)' if is_hacker else 'rgba(255, 75, 75, 0.2)'
     bg_color = '#000000' if is_hacker else 'rgba(0,0,0,0)'
     text_color = '#00FF00' if is_hacker else '#31333F'
 
+    # 使用正確的 plotly.express (px) 建立
     fig = px.line_polar(
         r=values + [values[0]],
         theta=categories + [categories[0]],
         line_close=True
     )
-    fig.update_traces(fill='subsection', fillcolor=fill_color, line_color=line_color)
+    
+    # 優化外觀
+    fig.update_traces(fill='toself', fillcolor=fill_color, line_color=line_color)
     fig.update_layout(
         polar=dict(
             radialaxis=dict(visible=True, range=[0, 100], gridcolor='#444444' if is_hacker else '#E5E5E5'),
@@ -139,26 +141,23 @@ def draw_radar_chart():
     return fig
 
 # ==========================================
-# 5. 🎛️ 側邊欄控制中心 (切換開關常駐)
+# 5. 🎛️ 側邊欄控制中心
 # ==========================================
 with st.sidebar:
     st.subheader("⚙️ 工作台控制中心")
     
-    # 核心模式切換器
     selected_mode = st.radio(
         "切換工作台人格：",
         ["正常模式 📊", "駭客模式 ⚡"],
         index=0 if st.session_state.workspace_mode == "正常模式 📊" else 1
     )
     
-    # 當檢測到使用者改變 Radio 時，立刻重整以套用新樣式
     if selected_mode != st.session_state.workspace_mode:
         st.session_state.workspace_mode = selected_mode
         st.rerun()
 
     st.markdown("---")
     
-    # 根據不同模式，側邊欄顯示不同內容
     if st.session_state.workspace_mode == "正常模式 📊":
         st.markdown("📈 **今日個人狀態維度**")
         st.plotly_chart(draw_radar_chart(), use_container_width=True)
