@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v4.1",
+    page_title="Cyber Hacker Workstation v4.2",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -20,13 +20,17 @@ st.set_page_config(
 
 NOTE_FILE = "sticky_notes.txt"
 KB_FILE = "my_knowledge_base.md"
-DOC_FILE = "cyber_document.md"  # Word/PPT 核心文本儲存
+DOC_FILE = "cyber_document.md"
 
-# 初始化檔案：將 DOC_FILE 的預設內容改為完全空白
+# 🟢 初始化檔案（強制將 Word/PPT 核心文本重置為空字串，確保畫面絕對乾淨）
+if "doc_initialized" not in st.session_state:
+    with open(DOC_FILE, "w", encoding="utf-8") as f:
+        f.write("")
+    st.session_state.doc_initialized = True
+
 for file, default_content in [
     (NOTE_FILE, "隨手記下目前的雜念、任務、待辦..."),
-    (KB_FILE, "# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。"),
-    (DOC_FILE, "")  # 🟢 初始狀態完全清空，不留任何文字
+    (KB_FILE, "# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。")
 ]:
     if not os.path.exists(file):
         with open(file, "w", encoding="utf-8") as f:
@@ -162,8 +166,8 @@ st.components.v1.html("""
 # ==========================================
 # 5. 主畫面排版 (Main UI Layout)
 # ==========================================
-st.title("⚡ 高效率個人工作台 v4.1")
-st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 雙模文書終端 (純淨空白版)")
+st.title("⚡ 高效率個人工作台 v4.2")
+st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 雙模文書終端 (強效純淨版)")
 
 # 第一層：即時情報 Bento Grid
 col_info1, col_info2 = st.columns([1, 2])
@@ -212,7 +216,6 @@ with col_left:
                 st.download_button("📥 匯出為 Word 格式", data=edited_doc, file_name="Cyber_Report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 
         with doc_tab2:
-            # 根據 "---" 分割投影片
             slides = [s.strip() for s in doc_content.split("---") if s.strip()]
             
             if not slides or doc_content.strip() == "":
@@ -221,11 +224,9 @@ with col_left:
                 if st.session_state.ppt_page >= len(slides):
                     st.session_state.ppt_page = len(slides) - 1
                 
-                # 渲染簡報箱
                 current_slide_content = slides[st.session_state.ppt_page]
                 st.markdown(f'<div class="ppt-slide-box">{current_slide_content}</div>', unsafe_allow_html=True)
                 
-                # PPT 控制按鈕
                 ppt_ctrl1, ppt_ctrl2, ppt_ctrl3 = st.columns([1, 2, 1])
                 with ppt_ctrl1:
                     if st.button("⬅️ 上一頁") and st.session_state.ppt_page > 0:
