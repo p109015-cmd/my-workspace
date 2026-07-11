@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v8.0",
+    page_title="Cyber Hacker Workstation v8.2",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -84,7 +84,7 @@ with st.sidebar:
     )
     is_hacker = "Hacker" in ui_mode
 
-    # 如果非駭客模式，強制重設狀態
+    # 如果離開駭客模式，關閉所有解鎖狀態
     if not is_hacker:
         st.session_state.hacker_console_active = False
         st.session_state.king_unlocked = False
@@ -163,7 +163,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# F1 快捷鍵
+# F1 快捷鍵相容層
 st.components.v1.html("""
     <script>
     const handleF1 = (e) => {
@@ -183,7 +183,7 @@ st.components.v1.html("""
 
 
 # ========================================================================
-# 🚨 畫面分流：全螢幕終極控制台 (畫面 A)
+# 🚨 關鍵分流邏輯：若解鎖控制台，直接進入全螢幕控制台 (畫面 A)
 # ========================================================================
 if is_hacker and st.session_state.hacker_console_active:
     
@@ -204,6 +204,7 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
+    # 動態變色主題定義
     if st.session_state.king_unlocked:
         speed_ms = "12"
         color_theme = "#ff0033"
@@ -219,7 +220,7 @@ if is_hacker and st.session_state.hacker_console_active:
         radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # 全螢幕代碼雨 (所有內部大括號全數雙重轉義 {{ }} 完畢)
+    # 頂部矩陣代碼雨 (大括號已全數安全雙重轉義 {{ }})
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -249,6 +250,7 @@ if is_hacker and st.session_state.hacker_console_active:
     """
     st.components.v1.html(matrix_rain_html, height=205)
     
+    # 控制台主要三大區塊
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     with h_col1:
         with st.container(border=True):
@@ -314,6 +316,7 @@ if is_hacker and st.session_state.hacker_console_active:
                 
             st.markdown(f"<p style='font-size:11px; color:{color_theme}; margin-top:6px; line-height:1.4;'>系統狀態: 在線 (ENCRYPTED)<br>中繼節點: SOCKS5://103.24.51.9</p>", unsafe_allow_html=True)
 
+    # 🛠️ 【完整修復】重新把密碼輸入框放回「控制台 (畫面 A)」的最下方！這樣才能完美呈現圖 1
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input(
@@ -326,6 +329,8 @@ if is_hacker and st.session_state.hacker_console_active:
             st.session_state.king_unlocked = True
             st.toast("👑 終極皇權模式已啟用！矩陣系統開始全域超頻！", icon="👑")
             st.rerun()
+        elif cmd_input and cmd_input.strip() != "king1030622":
+            st.toast(f"執行指令: {cmd_input}", icon="📟")
 
 else:
     # ========================================================================
@@ -412,7 +417,6 @@ else:
             is_hacker_js = "true" if is_hacker else "false"
             pomo_speed_js = "0.04" if st.session_state.pomodoro_active else "0.015"
             
-            # 【關鍵修復】將所有 JavaScript 的大括號內部邏輯使用雙重大括號 {{ }} 進行轉義，防止 Streamlit KeyError 崩潰
             radar_html = f"""
             <div style="text-align: center; background: { '#03120E' if is_hacker else '#f7f9fa' }; padding: 10px; border-radius: 8px;">
                 <canvas id="militaryRadar" width="360" height="320"></canvas>
@@ -458,7 +462,7 @@ else:
             """
             st.components.v1.html(radar_html, height=340)
 
-        # 系統日誌流通行閘門
+        # 系統日誌流通行閘門 (畫面 B 用來進入控制台的入口)
         if is_hacker:
             with st.container(border=True):
                 st.subheader("📟 系統事件日誌流 (Execute)")
