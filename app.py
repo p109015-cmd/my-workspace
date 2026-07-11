@@ -97,28 +97,40 @@ if secret_trigger == "1030622":
 # ==========================================
 hacker_css = ""
 if is_hacker:
-    hacker_css = """
-        .stApp { background-color: #0d0d0d !important; color: #00ff66 !important; font-family: 'Courier New', monospace !important; }
-        [data-testid="stSidebar"] { background-color: #1a1a1a !important; color: #00ff66 !important; border-right: 1px solid #00ff66; }
-        [data-testid="stMetric"] { background-color: #111111 !important; border: 1px solid #00ff66 !important; border-radius: 8px; padding: 10px; }
-        div[data-testid="stContainer"] { border: 1px solid #00ff66 !important; background-color: #111111 !important; color: #00ff66 !important; }
-        textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
-        p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
-        
-        button[data-testid="baseButton-secondary"] {
-            background-color: #000000 !important;
-            color: #00ff66 !important;
-            border: 1px solid #00ff66 !important;
-            font-weight: bold !important;
-            font-family: 'Courier New', monospace !important;
-            transition: all 0.3s ease;
-        }
-        button[data-testid="baseButton-secondary"]:hover {
-            background-color: #00ff66 !important;
-            color: #000000 !important;
-            box-shadow: 0 0 10px #00ff66;
-        }
-    """
+ hacker_css = """
+    /* 全域背景與文字顏色變更 */
+    .stApp { background-color: #0d0d0d !important; color: #00ff66 !important; font-family: 'Courier New', monospace !important; }
+    [data-testid="stSidebar"] { background-color: #1a1a1a !important; color: #00ff66 !important; border-right: 1px solid #00ff66; }
+    [data-testid="stMetric"] { background-color: #111111 !important; border: 1px solid #00ff66 !important; border-radius: 8px; padding: 10px; }
+    div[data-testid="stContainer"] { border: 1px solid #00ff66 !important; background-color: #111111 !important; color: #00ff66 !important; }
+    textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
+    p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
+    
+    /* 🛠️ 1. 深度修正：強制將所有 Streamlit 按鈕背景全黑、綠框、綠字 */
+    div[data-testid="stButton"] button {
+        background-color: #000000 !important;
+        color: #00ff66 !important;
+        border: 1px solid #00ff66 !important;
+        font-weight: bold !important;
+        font-family: 'Courier New', monospace !important;
+        transition: all 0.3s ease !important;
+    }
+    div[data-testid="stButton"] button:hover {
+        background-color: #00ff66 !important;
+        color: #000000 !important;
+        box-shadow: 0 0 10px #00ff66 !important;
+    }
+
+    /* 🛠️ 2. 深度修正：將 st.info() 穿幫的白色區塊徹底抹黑，只留綠字與綠框 */
+    div[data-testid="stAlert"] {
+        background-color: #111111 !important;
+        color: #00ff66 !important;
+        border: 1px solid #004411 !important;
+    }
+    div[data-testid="stAlert"] div {
+        color: #00ff66 !important;
+    }
+"""
 
 st.markdown(f"<style>{hacker_css}</style>", unsafe_allow_html=True)
 
