@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v5.6",
+    page_title="Cyber Hacker Workstation v5.7",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -112,7 +112,7 @@ with st.sidebar:
 radar_data = {"Coding": val_coding, "Focus": val_focus, "Learn": val_learn, "Energy": val_energy, "Delivery": val_delivery}
 
 # ==========================================
-# 3. 全域 CSS 強力黑化
+# 3. 全域 CSS 強力黑化 (含下載按鈕樣式修復)
 # ==========================================
 hacker_css = ""
 if is_hacker:
@@ -127,16 +127,23 @@ if is_hacker:
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         a { color: #88ccff !important; }
         
+        /* 強制將所有按鈕、下載按鈕及其內部的 p 標籤與外部包裝全部黑化 */
         div[data-testid="stButton"] button, div[data-testid="stDownloadButton"] button, div[data-testid="stDownloadButton"] a { 
             background-color: #000000 !important; 
             color: #00ff66 !important; 
             border: 1px solid #00ff66 !important; 
             font-weight: bold !important; 
         }
+        div[data-testid="stDownloadButton"] button p {
+            color: #00ff66 !important;
+        }
         div[data-testid="stButton"] button:hover, div[data-testid="stDownloadButton"] button:hover { 
             background-color: #00ff66 !important; 
             color: #000000 !important; 
             box-shadow: 0 0 8px #00ff66 !important; 
+        }
+        div[data-testid="stDownloadButton"] button:hover p {
+            color: #000000 !important;
         }
         div[data-testid="stNotification"], div[data-testid="stAlert"] { background-color: #000000 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; }
     """
@@ -207,12 +214,12 @@ if is_hacker and st.session_state.hacker_console_active:
     st.markdown("---")
     
     # 密碼雨參數動態判定
-    speed_ms = "15" if st.session_state.king_unlocked else "35"
+    speed_ms = "12" if st.session_state.king_unlocked else "35"
     color_theme = "#ff0033" if st.session_state.king_unlocked else "#00ff66"
     
-    # 用 JS 內建字串陣列處理，徹底避開 Python f-string 剖析錯誤
+    # 避開 Python f-string 剖析錯誤的 JS 核心代碼
     if st.session_state.king_unlocked:
-        js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑'.split('')"
+        js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑🔱'.split('')"
     else:
         js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙'.split('')"
     
@@ -264,7 +271,7 @@ if is_hacker and st.session_state.hacker_console_active:
     with h_col2:
         with st.container(border=True):
             st.subheader("🛰️ 雷達追蹤 (極速脈衝模式)")
-            radar_speed = "0.2" if st.session_state.king_unlocked else "0.08"
+            radar_speed = "0.25" if st.session_state.king_unlocked else "0.08"
             radar_color = "rgba(255, 0, 50, 0.3)" if st.session_state.king_unlocked else "rgba(0, 235, 212, 0.2)"
             radar_line_color = "#ff0033" if st.session_state.king_unlocked else "#004411"
             
@@ -298,11 +305,10 @@ if is_hacker and st.session_state.hacker_console_active:
     with h_col3:
         with st.container(border=True):
             st.subheader("☣️ 系統後台事件解密流")
-            log_interval = "150" if st.session_state.king_unlocked else "400"
+            log_interval = "120" if st.session_state.king_unlocked else "400"
             
-            # 用 JS 的方式組合陣列，避免大括號混淆
             if st.session_state.king_unlocked:
-                js_active_pool = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...']"
+                js_active_pool = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[OVERCLOCK] SYSTEM HEATING UP TO 94C...']"
             else:
                 js_active_pool = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
                 
@@ -332,13 +338,13 @@ if is_hacker and st.session_state.hacker_console_active:
             key="hacker_cmd_terminal",
             placeholder="請輸入核心交互指令... (提示: 輸入通行密碼以彈出原版終極控制台)",
         )
-        if cmd_input:
-            if cmd_input.strip() == "king1030622":
-                st.session_state.king_unlocked = True
-                st.toast("👑 通行密碼驗證通過！原版終極控制台已全域超頻載入！", icon="🔥")
-                st.rerun()
-            else:
-                st.toast(f"執行未授權本地指令: {cmd_input}", icon="📟")
+        # 只要偵測到密碼，立刻執行全域覆寫，防止被 Rerun 蓋過
+        if cmd_input.strip() == "king1030622":
+            st.session_state.king_unlocked = True
+            st.toast("👑 通行密碼驗證通過！原版終極控制台已全域超頻載入！", icon="🔥")
+            st.rerun()
+        elif cmd_input:
+            st.toast(f"執行未授權本地指令: {cmd_input}", icon="📟")
 
 else:
     # ------------------------------------------
@@ -470,7 +476,7 @@ else:
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
                     }}
                     ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy);
-                    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); ctx.stroke();
+                    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); stroke();
                     
                     ctx.beginPath();
                     targets.forEach((t, i) => {{
