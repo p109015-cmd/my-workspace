@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v8.4",
+    page_title="Cyber Hacker Workstation v8.5",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -84,7 +84,6 @@ with st.sidebar:
     )
     is_hacker = "Hacker" in ui_mode
 
-    # 如果非駭客模式，清空狀態
     if not is_hacker:
         st.session_state.hacker_console_active = False
         st.session_state.king_unlocked = False
@@ -163,7 +162,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# F1 快捷鍵相容層
+# F1 快捷鍵
 st.components.v1.html("""
     <script>
     const handleF1 = (e) => {
@@ -183,7 +182,7 @@ st.components.v1.html("""
 
 
 # ========================================================================
-# 🚨 畫面分流：全螢幕控制台 (畫面 A)
+# 🚨 畫面分流：全螢幕終極控制台 (畫面 A)
 # ========================================================================
 if is_hacker and st.session_state.hacker_console_active:
     
@@ -204,7 +203,7 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 動態變色變數設定
+    # 動態變色主題
     if st.session_state.king_unlocked:
         speed_ms = "12"
         color_theme = "#ff0033"
@@ -218,13 +217,13 @@ if is_hacker and st.session_state.hacker_console_active:
         radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # 頂部矩陣代碼雨 (徹底修復：不透過 Python 變數傳遞字串，完全由 JS 本地定義，100% 絕不報錯白屏)
-    matrix_rain_html = f"""
-    <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
+    # 100% 安全純字串（完全不使用 f-string，徹底斷絕白屏可能性）
+    matrix_rain_template = """
+    <div style="background:#000; padding:10px; border:2px solid __COLOR__; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
     </div>
     <script>
-    (function(){{
+    (function(){
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
@@ -232,23 +231,23 @@ if is_hacker and st.session_state.hacker_console_active:
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
-        function draw() {{
+        function draw() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.06)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '{color_theme}'; ctx.font = fontSize + 'px monospace';
-            for(let i=0; i<drops.length; i++) {{
+            ctx.fillStyle = '__COLOR__'; ctx.font = fontSize + 'px monospace';
+            for(let i=0; i<drops.length; i++) {
                 const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i*fontSize, drops[i]*fontSize);
-                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) {{ drops[i] = 0; }}
+                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) { drops[i] = 0; }
                 drops[i]++;
-            }}
-        }}
-        setInterval(draw, {speed_ms});
-    }})();
+            }
+        }
+        setInterval(draw, __SPEED__);
+    })();
     </script>
     """
+    matrix_rain_html = matrix_rain_template.replace("__COLOR__", color_theme).replace("__SPEED__", speed_ms)
     st.components.v1.html(matrix_rain_html, height=205)
     
-    # 控制台功能區
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     with h_col1:
         with st.container(border=True):
@@ -265,31 +264,32 @@ if is_hacker and st.session_state.hacker_console_active:
     with h_col2:
         with st.container(border=True):
             st.subheader("🛰️ 雷達追蹤 (極速脈衝模式)")
-            radar_html_fs = f"""
+            radar_template_fs = """
             <div style="text-align: center; background: #03120E; padding: 5px; border-radius: 8px;">
                 <canvas id="radarFS" width="300" height="230"></canvas>
             </div>
             <script>
-            (function() {{
+            (function() {
                 const canvas = document.getElementById('radarFS');
                 const ctx = canvas.getContext('2d');
                 let angle = 0;
                 const cx = canvas.width / 2; const cy = canvas.height / 2;
-                function draw() {{
+                function draw() {
                     ctx.fillStyle = '#03120E'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.strokeStyle = '{radar_line_color}';
-                    for(let r = 20; r <= 100; r += 20) {{
+                    ctx.strokeStyle = '__LINE_COLOR__';
+                    for(let r = 20; r <= 100; r += 20) {
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-                    }}
-                    ctx.fillStyle = '{radar_color}'; ctx.beginPath(); ctx.moveTo(cx, cy);
+                    }
+                    ctx.fillStyle = '__RADAR_COLOR__'; ctx.beginPath(); ctx.moveTo(cx, cy);
                     ctx.arc(cx, cy, 100, angle, angle + 0.5); ctx.closePath(); ctx.fill();
-                    angle += {radar_speed}; 
+                    angle += __SPEED__; 
                     requestAnimationFrame(draw);
-                }}
+                }
                 draw();
             })();
             </script>
             """
+            radar_html_fs = radar_template_fs.replace("__LINE_COLOR__", radar_line_color).replace("__RADAR_COLOR__", radar_color).replace("__SPEED__", radar_speed)
             st.components.v1.html(radar_html_fs, height=250)
 
     with h_col3:
@@ -314,7 +314,7 @@ if is_hacker and st.session_state.hacker_console_active:
                 
             st.markdown(f"<p style='font-size:11px; color:{color_theme}; margin-top:6px; line-height:1.4;'>系統狀態: 在線 (ENCRYPTED)<br>中繼節點: SOCKS5://103.24.51.9</p>", unsafe_allow_html=True)
 
-    # 🔑 密碼與指令輸入框（完美固定出現在控制台最下方）
+    # 🔑 密碼與指令輸入框（圖1的核心位置，完美固定）
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input(
@@ -412,56 +412,69 @@ else:
     with col_right:
         with st.container(border=True):
             st.subheader("🛰️ 軍用即時聲納雷達監控")
-            is_hacker_js = "true" if is_hacker else "false"
-            pomo_speed_js = "0.04" if st.session_state.pomodoro_active else "0.015"
             
-            # 軍用雷達
-            radar_html = f"""
-            <div style="text-align: center; background: { '#03120E' if is_hacker else '#f7f9fa' }; padding: 10px; border-radius: 8px;">
+            # 純字串格式化，杜絕大括號引發的白屏問題
+            radar_template = """
+            <div style="text-align: center; background: __BG__; padding: 10px; border-radius: 8px;">
                 <canvas id="militaryRadar" width="360" height="320"></canvas>
             </div>
             <script>
-            (function() {{
+            (function() {
                 const canvas = document.getElementById('militaryRadar');
                 const ctx = canvas.getContext('2d');
-                const isHacker = {is_hacker_js};
-                const sweepSpeed = {pomo_speed_js};
-                const colors = isHacker ? {{ bg: '#03120E', grid: '#004411', line: '#00ebd4', sweep: 'rgba(0, 235, 212, 0.15)', target: '#00ffcc' }} : {{ bg: '#f7f9fa', grid: '#d1dbe0', line: '#0070f3', sweep: 'rgba(0, 112, 243, 0.08)', target: '#0051a8' }};
+                const isHacker = __IS_HACKER__;
+                const sweepSpeed = __SWEEP_SPEED__;
+                
+                let bg_color = isHacker ? '#03120E' : '#f7f9fa';
+                let grid_color = isHacker ? '#004411' : '#d1dbe0';
+                let line_color = isHacker ? '#00ebd4' : '#0070f3';
+                let sweep_color = isHacker ? 'rgba(0, 235, 212, 0.15)' : 'rgba(0, 112, 243, 0.08)';
+                
                 let angle = 0; const cx = canvas.width / 2; const cy = canvas.height / 2; const maxRadius = 130;
                 const targets = [
-                    {{ name: 'Coding', val: {radar_data['Coding']}, angle: -Math.PI/2 }},
-                    {{ name: 'Focus', val: {radar_data['Focus']}, angle: -Math.PI/2 + (Math.PI*2/5) }},
-                    {{ name: 'Learn', val: {radar_data['Learn']}, angle: -Math.PI/2 + (Math.PI*2/5)*2 }},
-                    {{ name: 'Energy', val: {radar_data['Energy']}, angle: -Math.PI/2 + (Math.PI*2/5)*3 }},
-                    {{ name: 'Delivery', val: {radar_data['Delivery']}, angle: -Math.PI/2 + (Math.PI*2/5)*4 }}
+                    { name: 'Coding', val: __VAL_CODING__, angle: -Math.PI/2 },
+                    { name: 'Focus', val: __VAL_FOCUS__, angle: -Math.PI/2 + (Math.PI*2/5) },
+                    { name: 'Learn', val: __VAL_LEARN__, angle: -Math.PI/2 + (Math.PI*2/5)*2 },
+                    { name: 'Energy', val: __VAL_ENERGY__, angle: -Math.PI/2 + (Math.PI*2/5)*3 },
+                    { name: 'Delivery', val: __VAL_DELIVERY__, angle: -Math.PI/2 + (Math.PI*2/5)*4 }
                 ];
-                function draw() {{
-                    ctx.fillStyle = colors.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
-                    for(let r = 30; r <= maxRadius; r += 30) {{ 
+                function draw() {
+                    ctx.fillStyle = bg_color; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = grid_color; ctx.lineWidth = 1;
+                    for(let r = 30; r <= maxRadius; r += 30) { 
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); 
-                    }}
+                    }
                     ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy); ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); ctx.stroke();
                     ctx.beginPath(); 
-                    targets.forEach((t, i) => {{ 
+                    targets.forEach((t, i) => { 
                         let r = (t.val / 100) * maxRadius; 
                         let x = cx + r * Math.cos(t.angle); 
                         let y = cy + r * Math.sin(t.angle); 
                         if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); 
-                    }}); 
+                    }); 
                     ctx.closePath();
                     ctx.strokeStyle = isHacker ? 'rgba(0,255,102,0.6)' : 'rgba(255,75,75,0.6)'; ctx.stroke();
-                    ctx.fillStyle = colors.sweep; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxRadius, angle, angle + 0.4); ctx.closePath(); ctx.fill();
-                    ctx.strokeStyle = colors.line; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + maxRadius * Math.cos(angle + 0.4), cy + maxRadius * Math.sin(angle + 0.4)); ctx.stroke();
+                    ctx.fillStyle = sweep_color; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxRadius, angle, angle + 0.4); ctx.closePath(); ctx.fill();
+                    ctx.strokeStyle = line_color; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + maxRadius * Math.cos(angle + 0.4), cy + maxRadius * Math.sin(angle + 0.4)); ctx.stroke();
                     angle += sweepSpeed; requestAnimationFrame(draw);
-                }}
+                }
                 draw();
-            }})();
+            })();
             </script>
             """
+            radar_html = (radar_template
+                          .replace("__BG__", '#03120E' if is_hacker else '#f7f9fa')
+                          .replace("__IS_HACKER__", "true" if is_hacker else "false")
+                          .replace("__SWEEP_SPEED__", "0.04" if st.session_state.pomodoro_active else "0.015")
+                          .replace("__VAL_CODING__", str(radar_data['Coding']))
+                          .replace("__VAL_FOCUS__", str(radar_data['Focus']))
+                          .replace("__VAL_LEARN__", str(radar_data['Learn']))
+                          .replace("__VAL_ENERGY__", str(radar_data['Energy']))
+                          .replace("__VAL_DELIVERY__", str(radar_data['Delivery'])))
+            
             st.components.v1.html(radar_html, height=340)
 
-        # 系統日誌流通行閘門 (主畫面進入控制台按鈕與通道)
+        # 系統日誌流通行閘門
         if is_hacker:
             with st.container(border=True):
                 st.subheader("📟 系統事件日誌流 (Execute)")
