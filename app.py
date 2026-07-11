@@ -9,7 +9,7 @@ from datetime import datetime
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v9.0",
+    page_title="Cyber Hacker Workstation v9.2",
     page_icon="👑",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -37,14 +37,13 @@ for file, default_content in [
 # 初始化 Session 狀態
 if "hacker_simulator_unlocked" not in st.session_state: st.session_state.hacker_simulator_unlocked = False
 if "ppt_page" not in st.session_state: st.session_state.ppt_page = 0
-if "pomodoro_active" not in st.session_state: st.session_state.pomodoro_active = False
 if "hacker_console_active" not in st.session_state: st.session_state.hacker_console_active = False
 if "king_unlocked" not in st.session_state: st.session_state.king_unlocked = False
 if "active_panel" not in st.session_state: st.session_state.active_panel = None
 if "nuke_detonated" not in st.session_state: st.session_state.nuke_detonated = False
 
 # ==========================================
-# 1. 拔除外部網路 API，改為純本地高速模擬
+# 1. 純本地高速模擬數據
 # ==========================================
 def get_formatted_weather():
     current_hour = datetime.now().hour
@@ -82,7 +81,7 @@ with st.sidebar:
     st.subheader("⏱️ 賽博脈衝番茄鐘")
     pomo_col1, pomo_col2 = st.columns(2)
     with pomo_col1:
-        if st.button("🏁 啟動專注" if not st.session_state.pomodoro_active else "🛑 終止專注"):
+        if st.button("🏁 啟動專注" if not st.session_state.pomodoro_active else "🛑 終止專注", key="sidebar_pomo_btn"):
             st.session_state.pomodoro_active = not st.session_state.pomodoro_active
     with pomo_col2:
         st.write("🟢 專注中..." if st.session_state.pomodoro_active else "⚪ 待命")
@@ -101,7 +100,7 @@ with st.sidebar:
 radar_data = {"Coding": val_coding, "Focus": val_focus, "Learn": val_learn, "Energy": val_energy, "Delivery": val_delivery}
 
 # ==========================================
-# 3. 全域 CSS 強力黑化與爆紅自毀樣式 (大括號已修正)
+# 3. 全域 CSS 強力黑化與爆紅自毀樣式
 # ==========================================
 hacker_css = ""
 if is_hacker:
@@ -265,7 +264,7 @@ if is_hacker and st.session_state.hacker_console_active:
             if st.button("☢️ 引爆核彈 (Launch Strategic Nuke)", use_container_width=True): st.session_state.active_panel = "nuke_launch"
 
     # ========================================================================
-    # 🕹️ 核心動態聯動交互面板 (5 大按鈕對應畫面)
+    # 🕹️ 核心動態聯動交互面板
     # ========================================================================
     if st.session_state.active_panel:
         st.write("")
@@ -292,43 +291,104 @@ if is_hacker and st.session_state.hacker_console_active:
                 fake_data = "IP_Address,Access_Token,Status\n103.24.51.9,X78S922K,ROOT\n192.168.1.22,KING0622,OVERCLOCK"
                 st.download_button("📥 下載已打包憑證機密明單 (.csv)", fake_data, file_name="compromised_credentials.csv", mime="text/csv")
 
-        # --- 2. 衛星劫持 (修正大括號與 getContext) ---
+        # --- 2. 衛星劫持 (震撼重製版：星軌對焦、波形校準、全景格線視野) ---
         elif st.session_state.active_panel == "satellite":
             with st.container(border=True):
                 st.subheader("📡 [ORBITAL-LINK] 戰略衛星特種劫持控制台")
-                sat_target = st.text_input("⌨️ 請輸入欲鎖定的目標國家/城市名稱：", value="台灣", key="sat_target_input")
+                sat_target = st.text_input("⌨️ 請輸入欲鎖定的目標國家/城市名稱：", value="東京", key="sat_target_input")
                 
                 sat_html = f"""
                 <div style="background:#000; padding:10px; border:1px solid #00ff66; border-radius:5px; text-align:center;">
-                    <canvas id="satCanvas" width="600" height="220" style="background:#020b08;"></canvas>
+                    <canvas id="satCanvas" width="650" height="250" style="background:#020b08;"></canvas>
                 </div>
                 <script>
                 (function(){{
                     const canvas = document.getElementById('satCanvas'); const ctx = canvas.getContext('2d');
-                    let target = "{sat_target}"; let angle = 0; let scale = 1.5; let lockTimer = 0;
+                    let target = "{sat_target}";
+                    let t = 0;
+                    let wavePhase = 0;
+
                     function draw() {{
                         ctx.fillStyle = '#020b08'; ctx.fillRect(0,0,canvas.width,canvas.height);
-                        let cx = canvas.width/2; let cy = canvas.height/2;
+                        let cx = canvas.width / 2; let cy = canvas.height / 2;
                         
-                        ctx.strokeStyle = 'rgba(0,68,17,0.4)'; ctx.lineWidth = 1;
+                        // 背景戰略綠網格
+                        ctx.strokeStyle = 'rgba(0, 68, 17, 0.25)'; ctx.lineWidth = 1;
                         for(let i=0; i<canvas.width; i+=40) {{ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }}
                         for(let j=0; j<canvas.height; j+=40) {{ ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }}
                         
-                        lockTimer += 2;
-                        if(lockTimer < 100) {{
-                            ctx.strokeStyle = '#00ff66'; ctx.beginPath(); ctx.arc(cx, cy, 80 * scale, 0, Math.PI*2); ctx.stroke();
-                            ctx.fillStyle = 'rgba(0,255,102,0.1)'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy, 120, angle, angle+0.8); ctx.closePath(); ctx.fill();
-                            ctx.fillStyle = '#00ff66'; ctx.font = '14px monospace'; ctx.fillText("[SCANNING & LOCKING]: " + target + "...", 20, 30);
-                            scale = 1.0 + Math.sin(lockTimer/10)*0.3; angle += 0.1;
-                        }} else {{
+                        t += 0.8;
+                        wavePhase += 0.15;
+                        
+                        // 1. 搜尋鎖定與波形建立階段 (t < 100)
+                        if(t < 100) {{
+                            let scale = 1.0 + Math.sin(t/5)*0.2;
+                            
+                            // 掃描卡尺圈
+                            ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 1.5;
+                            ctx.beginPath(); ctx.arc(cx, cy, 70 * scale, 0, Math.PI*2); ctx.stroke();
+                            
+                            // 雷達轉動扇面
+                            ctx.fillStyle = 'rgba(0,255,102,0.06)';
+                            ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy, 100, t/10, t/10 + 0.6); ctx.closePath(); ctx.fill();
+                            
+                            // 繪製動態調頻通訊波形 (下方)
+                            ctx.strokeStyle = 'rgba(0, 255, 102, 0.5)'; ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            for(let x=20; x<220; x++) {{
+                                let y = 220 + Math.sin(x*0.08 + wavePhase) * 12 * (t/100);
+                                if(x===20) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                            }}
+                            ctx.stroke();
+                            
+                            // 浮動文字資訊
+                            ctx.fillStyle = '#00ff66'; ctx.font = '12px monospace'; ctx.textAlign='left';
+                            ctx.fillText("📡 UPLINK STATUS: STAGE 1 (TUNING...)", 20, 30);
+                            ctx.fillText("⚡ SIGNAL BEAM POWER: " + t.toFixed(0) + "%", 20, 50);
+                            ctx.fillText("🛰️ ALIGNING ORBIT ORBITAL_POS_X22...", 20, 70);
+                            
+                            ctx.textAlign = 'right';
+                            ctx.fillText("TARGET LOCKING >> " + target.toUpperCase(), canvas.width - 20, 30);
+                            ctx.fillText("AZIMUTH: " + (t*3.6).toFixed(1) + "°", canvas.width - 20, 50);
+                        }} 
+                        // 2. 覆寫成功：切換至戰略相機視野 (t >= 100)
+                        else {{
+                            // 外框紅化加粗鎖定
+                            ctx.strokeStyle = '#ff0033'; ctx.lineWidth = 3;
+                            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+                            
+                            // 軍用鏡頭十字瞄準格線
+                            ctx.strokeStyle = 'rgba(255, 0, 51, 0.35)'; ctx.lineWidth = 1;
+                            ctx.beginPath(); ctx.moveTo(cx - 150, cy); ctx.lineTo(cx + 150, cy); ctx.moveTo(cx, cy - 90); ctx.lineTo(cx, cy + 90); ctx.stroke();
+                            ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.stroke();
+                            ctx.beginPath(); ctx.arc(cx, cy, 75, 0, Math.PI*2); ctx.stroke();
+                            
+                            // 四角科技感截角
+                            let size = 20;
                             ctx.strokeStyle = '#ff0033'; ctx.lineWidth = 2;
-                            ctx.beginPath(); ctx.arc(cx, cy, 50, 0, Math.PI*2); ctx.stroke();
-                            ctx.beginPath(); ctx.moveTo(cx-70, cy); ctx.lineTo(cx+70, cy); ctx.moveTo(cx, cy-70); ctx.lineTo(cx, cy+70); ctx.stroke();
-                            ctx.fillStyle = '#ff0033'; ctx.font = '14px monospace';
-                            ctx.fillText("[🔒 TARGET LOCKED SUCCESS]", 20, 30);
-                            ctx.fillText("TARGET: " + target.toUpperCase(), 20, 50);
-                            ctx.fillText("LAT: " + (22.0622 + Math.random()*2).toFixed(4) + "° N", 20, 70);
-                            ctx.fillText("LNG: " + (120.5190 + Math.random()*2).toFixed(4) + "° E", 20, 90);
+                            ctx.beginPath(); ctx.moveTo(cx-100, cy-60+size); ctx.lineTo(cx-100, cy-60); ctx.lineTo(cx-100+size, cy-60); ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(cx+100, cy-60+size); ctx.lineTo(cx+100, cy-60); ctx.lineTo(cx+100-size, cy-60); ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(cx-100, cy+60-size); ctx.lineTo(cx-100, cy+60); ctx.lineTo(cx-100+size, cy+60); ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(cx+100, cy+60-size); ctx.lineTo(cx+100, cy+60); ctx.lineTo(cx+100-size, cy+60); ctx.stroke();
+
+                            // 模擬動態熱點（畫幾個代表建築物、道路矩陣的虛線紅框）
+                            ctx.strokeStyle = 'rgba(255, 51, 51, 0.5)';
+                            ctx.strokeRect(cx - 60, cy - 40, 40, 25);
+                            ctx.strokeRect(cx + 30, cy + 15, 50, 30);
+                            
+                            // 頂部與底部狀態條
+                            ctx.fillStyle = '#ff0033'; ctx.font = 'bold 13px monospace'; ctx.textAlign='left';
+                            ctx.fillText("🔒 [OVERRIDE COMPLETE: CAPTURING LIVE FEED]", 25, 35);
+                            ctx.font = '12px monospace';
+                            ctx.fillText("LAT: " + (35.6762 + Math.sin(t)*0.0001).toFixed(5) + "° N", 25, 55);
+                            ctx.fillText("LNG: " + (139.6503 + Math.cos(t)*0.0001).toFixed(5) + "° E", 25, 75);
+                            
+                            ctx.textAlign = 'right';
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillText("🔴 LIVE SECURE FEED [REC]", canvas.width - 25, 35);
+                            ctx.fillStyle = '#ff0033';
+                            ctx.fillText("ALTITUDE: 35,786.22 KM", canvas.width - 25, 55);
+                            ctx.fillText("RESOLUTION: MIL-SPEC THERMAL", canvas.width - 25, 75);
                         }}
                         requestAnimationFrame(draw);
                     }}
@@ -336,7 +396,7 @@ if is_hacker and st.session_state.hacker_console_active:
                 }})();
                 </script>
                 """
-                st.components.v1.html(sat_html, height=260)
+                st.components.v1.html(sat_html, height=280)
 
         # --- 3. 換臉偽裝 ---
         elif st.session_state.active_panel == "wipe":
@@ -392,7 +452,7 @@ if is_hacker and st.session_state.hacker_console_active:
                     st.toast("🛡️ 自毀程序已成功終止，核心防禦矩陣安全回復！", icon="🛡️")
                     st.rerun()
 
-        # --- 5. 引爆核彈 (附帶打字框 + 發射按鈕) ---
+        # --- 5. 引爆核彈 (多彈頭、落地震動、EMP 雪花斷訊) ---
         elif st.session_state.active_panel == "nuke_launch":
             with st.container(border=True):
                 st.subheader("☢️ [STRATEGIC-NUKE] 洲際彈道導彈打擊終端")
@@ -405,42 +465,134 @@ if is_hacker and st.session_state.hacker_console_active:
                         st.rerun()
                 with nl_col2:
                     if st.session_state.nuke_detonated:
-                        st.error(f"🚀 戰略導彈已出井！預計打擊座標：{nuke_target.upper()}")
+                        st.error(f"🚀 MIRV戰術核彈頭再入中！目標：{nuke_target.upper()}")
                     else:
                         st.warning("等待最高指揮官按下紅色發射按鈕...")
                         
                 nuke_canvas_html = f"""
-                <div style="background:#000; padding:10px; border:1px solid #ff0033; border-radius:5px; text-align:center;">
-                    <canvas id="nukeCanvas" width="600" height="220" style="background:#0a0102;"></canvas>
+                <div id="nuke_wrapper" style="background:#000; padding:10px; border:1px solid #ff0033; border-radius:5px; text-align:center; overflow:hidden; position:relative;">
+                    <canvas id="nukeCanvas" width="650" height="250" style="background:#050001; vertical-align:middle;"></canvas>
                 </div>
                 <script>
                 (function(){{
                     const canvas = document.getElementById('nukeCanvas'); const ctx = canvas.getContext('2d');
+                    const wrapper = document.getElementById('nuke_wrapper');
                     let isLaunched = { "true" if st.session_state.nuke_detonated else "false" };
-                    let px = 50, py = 180; let t = 0;
+                    
+                    let t = 0;
+                    let shockwaveRadius = 0;
+                    let shockwaveAlpha = 1;
+                    
+                    function drawSnow() {{
+                        const imgData = ctx.createImageData(canvas.width, canvas.height);
+                        for (let i = 0; i < imgData.data.length; i += 4) {{
+                            let val = Math.floor(Math.random() * 85);
+                            imgData.data[i] = val + 40;     
+                            imgData.data[i+1] = val;        
+                            imgData.data[i+2] = val;        
+                            imgData.data[i+3] = 255;        
+                        }}
+                        ctx.putImageData(imgData, 0, 0);
+                        
+                        ctx.fillStyle = "#ff0033";
+                        ctx.font = "bold 20px monospace";
+                        ctx.textAlign = "center";
+                        ctx.fillText("💥 [CRITICAL: TELEMETRY LOST]", canvas.width/2, canvas.height/2 - 15);
+                        ctx.font = "13px monospace";
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillText("EMP INTERFERENCE DETECTED // SIGNAL TERMINATED", canvas.width/2, canvas.height/2 + 15);
+                    }}
+
                     function draw() {{
-                        ctx.fillStyle = '#0a0102'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                        if (isLaunched && t >= 1.25) {{
+                            drawSnow();
+                            requestAnimationFrame(draw);
+                            return;
+                        }}
                         
-                        ctx.strokeStyle = '#331111'; ctx.lineWidth = 2;
-                        ctx.beginPath(); ctx.moveTo(0, 180); ctx.lineTo(canvas.width, 180); ctx.stroke();
+                        ctx.fillStyle = '#050001'; ctx.fillRect(0,0,canvas.width,canvas.height);
                         
-                        ctx.fillStyle = '#00ff66'; ctx.font = '12px monospace'; ctx.fillText("[LAUNCH_SILO_22]", 20, 200);
-                        ctx.fillStyle = '#ff0033'; ctx.fillText("[TARGET: " + "{nuke_target}".toUpperCase() + "]", 480, 200);
+                        ctx.strokeStyle = '#22080a'; ctx.lineWidth = 1;
+                        for(let i=0; i<canvas.width; i+=50) {{ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }}
+                        for(let j=0; j<canvas.height; j+=40) {{ ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }}
                         
+                        ctx.strokeStyle = '#441116'; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.moveTo(0, 210); ctx.lineTo(canvas.width, 210); ctx.stroke();
+                        
+                        ctx.fillStyle = '#00ff66'; ctx.font = '11px monospace'; ctx.textAlign='left';
+                        ctx.fillText("🚀 SILO_22", 20, 230);
+                        
+                        ctx.fillStyle = '#ff0033'; ctx.textAlign='right';
+                        ctx.fillText("🎯 " + "{nuke_target}".toUpperCase(), canvas.width - 20, 230);
+                        
+                        let tx = canvas.width - 70; let ty = 210;
+                        ctx.strokeStyle = 'rgba(255, 0, 51, 0.4)';
+                        ctx.beginPath(); ctx.moveTo(tx-30, ty); ctx.lineTo(tx+30, ty); ctx.moveTo(tx, ty-30); ctx.lineTo(tx, ty+30); ctx.stroke();
+                        ctx.beginPath(); ctx.arc(tx, ty, 15, 0, Math.PI*2); ctx.stroke();
+
                         if(isLaunched) {{
-                            t += 0.01;
-                            if(t <= 1.0) {{
-                                px = 50 + t * 450;
-                                py = 180 - Math.sin(t * Math.PI) * 120;
-                                ctx.strokeStyle = 'rgba(255, 0, 51, 0.4)'; ctx.setLineDash([4, 4]);
-                                ctx.beginPath(); ctx.moveTo(50, 180); ctx.quadraticCurveTo(275, -20, 500, 180); ctx.stroke();
-                                ctx.setLineDash([]);
+                            t += 0.005;
+                            
+                            if (t <= 0.65) {{
+                                let px = 50 + t * (canvas.width - 120);
+                                let py = 210 - Math.sin((t / 0.65) * Math.PI) * 140;
                                 
-                                ctx.fillStyle = '#ff0033'; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
-                            }} else {{
-                                ctx.fillStyle = 'rgba(255,0,51,' + (Math.sin(Date.now()/50)+1)/2 + ')';
-                                ctx.beginPath(); ctx.arc(500, 180, 40, 0, Math.PI*2); ctx.fill();
-                                ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText("💥 IMPACT & DETONATED", 220, 100);
+                                ctx.strokeStyle = 'rgba(255, 0, 51, 0.2)'; ctx.setLineDash([4, 4]);
+                                ctx.beginPath(); ctx.moveTo(50, 210); ctx.quadraticCurveTo(canvas.width/2, -10, tx, ty); ctx.stroke(); ctx.setLineDash([]);
+                                
+                                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2); ctx.fill();
+                                ctx.fillStyle = '#ff0033'; ctx.font = '9px monospace'; ctx.fillText("ICBM_MAIN", px+8, py);
+                            }} 
+                            else if (t < 1.0) {{
+                                let t2 = (t - 0.65) / 0.35;
+                                let startX = 50 + 0.65 * (canvas.width - 120);
+                                let startY = 210 - Math.sin(Math.PI) * 140;
+                                
+                                let mirvs = [
+                                    {{ xExt: 0, yOff: 0, label: "MIRV_A" }},
+                                    {{ xExt: -25, yOff: -15, label: "MIRV_B" }},
+                                    {{ xExt: 25, yOff: -10, label: "MIRV_C" }}
+                                ];
+                                
+                                mirvs.forEach(m => {{
+                                    let curX = startX + t2 * (tx - startX + m.xExt);
+                                    let curY = 70 + t2 * (ty - 70 + m.yOff);
+                                    
+                                    ctx.strokeStyle = 'rgba(255, 0, 51, 0.4)'; ctx.lineWidth = 1.5;
+                                    ctx.beginPath(); ctx.moveTo(startX, 70); ctx.lineTo(curX, curY); ctx.stroke();
+                                    
+                                    ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.arc(curX, curY, 3, 0, Math.PI*2); ctx.fill();
+                                    ctx.fillStyle = '#ff0033'; ctx.font = '9px monospace'; ctx.fillText(m.label, curX + 6, curY);
+                                    
+                                    ctx.fillStyle = '#ffffff'; ctx.font = '10px monospace'; ctx.textAlign='left';
+                                    ctx.fillText("⚠️ WARHEAD ENTRY: " + ((1.0 - t2)*120).toFixed(1) + " KM", 20, 40);
+                                }});
+                            }}
+                            else if (t >= 1.0 && t < 1.25) {{
+                                let t3 = (t - 1.0) / 0.25;
+                                
+                                let shakeX = Math.floor(Math.random() * 16 - 8);
+                                let shakeY = Math.floor(Math.random() * 16 - 8);
+                                wrapper.style.left = shakeX + "px";
+                                wrapper.style.top = shakeY + "px";
+                                
+                                shockwaveRadius = t3 * 180;
+                                shockwaveAlpha = 1.0 - t3;
+                                
+                                let grad = ctx.createRadialGradient(tx, ty, 2, tx, ty, shockwaveRadius);
+                                grad.addColorStop(0, '#ffffff');
+                                grad.addColorStop(0.1, '#ffcc00');
+                                grad.addColorStop(0.3, '#ff0033');
+                                grad.addColorStop(1, 'rgba(26,0,3,0)');
+                                
+                                ctx.fillStyle = grad;
+                                ctx.beginPath(); ctx.arc(tx, ty, shockwaveRadius, 0, Math.PI*2); ctx.fill();
+                                
+                                ctx.strokeStyle = `rgba(255, 255, 255, ${{shockwaveAlpha}})`; ctx.lineWidth = 2;
+                                ctx.beginPath(); ctx.arc(tx, ty, shockwaveRadius * 0.7, 0, Math.PI*2); ctx.stroke();
+                                
+                                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 14px monospace'; ctx.textAlign='center';
+                                ctx.fillText("💥 BLAST IMPACT DETECTED 💥", canvas.width/2, 50);
                             }}
                         }}
                         requestAnimationFrame(draw);
@@ -449,13 +601,13 @@ if is_hacker and st.session_state.hacker_console_active:
                 }})();
                 </script>
                 """
-                st.components.v1.html(nuke_canvas_html, height=250)
+                st.components.v1.html(nuke_canvas_html, height=280)
                 
                 if st.button("🔄 重置導彈發射控制台"):
                     st.session_state.nuke_detonated = False
                     st.rerun()
 
-    # 🔑 密碼與指令輸入框
+    # 🔑 指令輸入框
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input("⌨️ [SYS-OVERRIDE] 核心指令輸入端 :", key="hacker_cmd_terminal", type="password", placeholder="請輸入核心交互密鑰（輸入 king1030622 可啟用終極皇權紅化超頻模式）...")
@@ -594,7 +746,7 @@ else:
                 st.markdown("---")
                 btn_col1, btn_col2 = st.columns(2)
                 with btn_col1:
-                    if st.button("🔓 解鎖特工模擬器" if not st.session_state.hacker_simulator_unlocked else "🔒 鎖定模擬器"):
+                    if st.button("🔓 解鎖特工模擬器" if not st.session_state.hacker_simulator_unlocked else "🔒 鎖定模擬器", key="gate_unlock_sim"):
                         st.session_state.hacker_simulator_unlocked = not st.session_state.hacker_simulator_unlocked; st.rerun()
                 with btn_col2:
-                    if st.button("⚡ 手動進入全螢幕控制台"): st.session_state.hacker_console_active = True; st.rerun()
+                    if st.button("⚡ 手動進入全螢幕控制台", key="gate_go_console"): st.session_state.hacker_console_active = True; st.rerun()
