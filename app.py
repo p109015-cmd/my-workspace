@@ -1,5 +1,5 @@
 
-     import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
@@ -13,7 +13,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v6.2",
+    page_title="Cyber Hacker Workstation v7.0",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -75,7 +75,7 @@ def get_google_news():
 # 2. 側邊欄控制中心 (Sidebar Control)
 # ==========================================
 with st.sidebar:
-    st.title("n🎛️ 控制中心")
+    st.title("🎛️ 控制中心")
     
     ui_mode = st.radio(
         "切換工作台模式 (或按 F1 鍵)",
@@ -85,7 +85,7 @@ with st.sidebar:
     )
     is_hacker = "Hacker" in ui_mode
 
-    # 如果離開駭客模式，清空控制台狀態
+    # 如果離開駭客模式，自動關閉所有跳轉狀態
     if not is_hacker:
         st.session_state.hacker_console_active = False
         st.session_state.king_unlocked = False
@@ -184,17 +184,14 @@ st.components.v1.html("""
 
 
 # ==========================================
-# 🛑 分流判斷：是否切換至全螢幕「終極控制台」畫面
+# 🛑 分流判斷：進入【全螢幕終極控制台】
 # ==========================================
 if is_hacker and st.session_state.hacker_console_active:
     
-    # ------------------------------------------
-    # 【畫面 A】全螢幕全域駭客控制台 / 終極控制台
-    # ------------------------------------------
     if st.session_state.king_unlocked:
-        st.title("👑 原版終極駭客控制台 (ROOT TERMINAL OVERCLOCK)")
+        st.title("👑 終極矩陣核心控制台 (OVERRIDE ACTIVE)")
     else:
-        st.title("📟 終極矩陣核心控制台 (OVERRIDE ACTIVE)")
+        st.title("📟 終極矩陣核心控制台 (STANDARD ACTIVE)")
     
     c_top1, c_top2 = st.columns([3, 1])
     with c_top1:
@@ -204,29 +201,27 @@ if is_hacker and st.session_state.hacker_console_active:
             st.rerun()
     with c_top2:
         if st.session_state.king_unlocked:
-            st.error("⚠️ CORE MODE: KING-REVOLUTION")
+            st.error("🚨 OVERCLOCK PROTOCOL ACTIVE")
             
     st.markdown("---")
     
-    # 【徹底修復 Bug】使用純英文字串與正確的 Javascript 傳遞法，防範 split 崩潰
+    # 【關鍵修復】移除所有可能導致 Python split('') 出錯的圖標字元，將特殊字元直接交給前端 JS 渲染，後端完全不使用 split
     if st.session_state.king_unlocked:
         speed_ms = "12"
-        color_theme = "#ff0033" # 密碼正確直接全畫面超頻變紅！
+        color_theme = "#ff0033"  # 輸入密碼正確後全螢幕超頻變紅！
         js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        js_logs_array = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[OVERCLOCK] SYSTEM HEATING UP TO 94C...']"
-        radar_speed = "0.25"
-        radar_color = "rgba(255, 0, 50, 0.3)"
+        radar_speed = "0.22"
+        radar_color = "rgba(255, 0, 50, 0.25)"
         radar_line_color = "#ff0033"
     else:
         speed_ms = "35"
-        color_theme = "#00ff66" # 預設為綠色
+        color_theme = "#00ff66"  # 未解鎖密碼前保持經典綠色
         js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        js_logs_array = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
-        radar_speed = "0.08"
-        radar_color = "rgba(0, 235, 212, 0.2)"
+        radar_speed = "0.06"
+        radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # HTML5 Canvas 密碼雨流 (修正相容性問題)
+    # HTML5 Canvas 密碼雨流 (前端完全獨立運行，不干涉 Python)
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -271,7 +266,7 @@ if is_hacker and st.session_state.hacker_console_active:
             
     with h_col2:
         with st.container(border=True):
-            st.subheader("🛰️ 雷達追蹤 (極速脈衝模式)")
+            st.subheader("🛰 Honor 聲納監控系統")
             radar_html_fs = f"""
             <div style="text-align: center; background: #03120E; padding: 5px; border-radius: 8px;">
                 <canvas id="radarFS" width="300" height="230"></canvas>
@@ -294,18 +289,18 @@ if is_hacker and st.session_state.hacker_console_active:
                     requestAnimationFrame(draw);
                 }}
                 draw();
-            }})();
+            })();
             </script>
             """
             st.components.v1.html(radar_html_fs, height=250)
 
     with h_col3:
+        # 完全還原你圖中的：[ GHOST-NETWORK ] 戰略後門操控模組
         with st.container(border=True):
-            # 載入先前設計的戰略後門操控模組區塊
             st.subheader("💀 [GHOST-NETWORK]")
-            st.markdown("""
-            <div style='border: 1px solid #00ff66; padding: 10px; border-radius: 5px; background-color: #051a10;'>
-                <p style='color: #00ff66; font-weight: bold; margin-bottom: 5px;'>[ 戰略後門操控模組 ]</p>
+            st.markdown(f"""
+            <div style='border: 1px solid {color_theme}; padding: 10px; border-radius: 5px; background-color: #051a10; margin-bottom:10px;'>
+                <p style='color: {color_theme}; font-weight: bold; margin-bottom: 0px;'>[ 戰略後門操控模組 ]</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -316,25 +311,27 @@ if is_hacker and st.session_state.hacker_console_active:
             b5 = st.button("☢️ 引爆核彈 (Launch Strategic Nuke)", use_container_width=True)
             
             if b5:
-                st.toast("⚠️ CRITICAL: 戰略武器引爆指令已向中繼節點發送！", icon="☢️")
+                st.toast("⚠️ CRITICAL: 戰略引爆指令已向中繼節點發送！", icon="☢️")
             elif b1 or b2 or b3 or b4:
                 st.toast("指令發送成功，執行中...", icon="⚡")
                 
-            st.caption("系統狀態: 在線 (ENCRYPTED) | 中繼節點: SOCKS5://103.24.51.9")
+            st.markdown(f"<p style='font-size:11px; color:{color_theme}; margin-top:5px;'>系統狀態: 在線 (ENCRYPTED)<br>中繼節點: SOCKS5://103.24.51.9</p>", unsafe_allow_html=True)
 
     st.write("")
     with st.container(border=True):
+        # 底部核心指令輸入端：輸入密碼 king1030622
         cmd_input = st.text_input(
             "⌨️ [SYS-OVERRIDE] 核心指令輸入端 :", 
             key="hacker_cmd_terminal",
-            placeholder="請輸入核心交互指令（例如輸入密碼切換模式）...",
+            type="password",
+            placeholder="請輸入解鎖密鑰...",
         )
         if cmd_input.strip() == "king1030622":
             st.session_state.king_unlocked = True
-            st.toast("👑 終極皇權模式已啟用！", icon="👑")
+            st.toast("👑 終極皇權模式已啟用！矩陣開始超頻！", icon="👑")
             st.rerun()
         elif cmd_input:
-            st.toast(f"執行指令: {cmd_input}", icon="📟")
+            st.toast(f"執行未授權指令: {cmd_input}", icon="📟")
 
 else:
     # ------------------------------------------
@@ -457,39 +454,27 @@ else:
             """
             st.components.v1.html(radar_html, height=340)
 
-        # 密碼輸入閘門
+        # 密碼輸入與分流觸發器
         if is_hacker:
             with st.container(border=True):
                 st.subheader("📟 系統事件日誌流 (Execute)")
                 
-                # 保留最核心的密碼輸入觸發器
+                # 第一步：在這裡輸入密碼 king1030622
                 cmd_box = st.text_input("🔑 輸入終極通行密碼解鎖全螢幕隱藏控制台：", key="main_hacker_gate", type="password", placeholder="請在此輸入密碼...")
                 
                 if cmd_box.strip() == "king1030622":
                     st.session_state.king_unlocked = True
                     st.session_state.hacker_console_active = True
-                    st.success("👑 密碼正確！正在強制全螢幕跳轉解鎖...")
+                    st.success("👑 密碼正確！正在進入全螢幕控制台...")
                     st.rerun()
                 
                 st.markdown("---")
-                if st.session_state.hacker_simulator_unlocked:
-                    st.write("🟢 模擬器安全隔離層：已開啟")
-                    b_col1, b_col2 = st.columns(2)
-                    with b_col1:
-                        if st.button("🔒 重新鎖定模擬器"):
-                            st.session_state.hacker_simulator_unlocked = False
-                            st.rerun()
-                    with b_col2:
-                        if st.button("⚡ 進入全域控制台", key="launch_panel_unlocked"):
-                            st.session_state.hacker_console_active = True
-                            st.rerun()
-                else:
-                    btn_col1, btn_col2 = st.columns(2)
-                    with btn_col1:
-                        if st.button("🔓 解鎖特工模擬器"):
-                            st.session_state.hacker_simulator_unlocked = True
-                            st.rerun()
-                    with btn_col2:
-                        if st.button("⚡ 進入全域控制台", key="launch_panel_locked"):
-                            st.session_state.hacker_console_active = True
-                            st.rerun()
+                btn_col1, btn_col2 = st.columns(2)
+                with btn_col1:
+                    if st.button("🔓 解鎖特工模擬器" if not st.session_state.hacker_simulator_unlocked else "🔒 鎖定模擬器"):
+                        st.session_state.hacker_simulator_unlocked = not st.session_state.hacker_simulator_unlocked
+                        st.rerun()
+                with btn_col2:
+                    if st.button("⚡ 直接進入全螢幕控制台"):
+                        st.session_state.hacker_console_active = True
+                        st.rerun()
