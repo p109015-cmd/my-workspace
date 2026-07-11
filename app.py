@@ -101,11 +101,10 @@ with st.sidebar:
 radar_data = {"Coding": val_coding, "Focus": val_focus, "Learn": val_learn, "Energy": val_energy, "Delivery": val_delivery}
 
 # ==========================================
-# 3. 全域 CSS 強力黑化與爆紅自毀樣式
+# 3. 全域 CSS 強力黑化與爆紅自毀樣式 (大括號已修正)
 # ==========================================
 hacker_css = ""
 if is_hacker:
-    # 判斷是否啟動自毀爆紅
     if st.session_state.active_panel == "nuke_self":
         theme_main = "#ff0033"
         bg_main = "#1a0003"
@@ -130,18 +129,18 @@ if is_hacker:
         p, li, h1, h2, h3, h4, h5, h6, span, label {{ color: {theme_main} !important; }}
         a {{ color: #88ccff !important; }}
         
-        div[data-testid="stButton"] button, div[data-testid="stDownloadButton"] button, div[data-testid="stDownloadButton"] a { {
+        div[data-testid="stButton"] button, div[data-testid="stDownloadButton"] button, div[data-testid="stDownloadButton"] a {{
             background-color: #000000 !important; 
             color: {theme_main} !important; 
             border: 1px solid {theme_main} !important; 
             font-weight: bold !important; 
-        } }
+        }}
         div[data-testid="stDownloadButton"] button p {{ color: {theme_main} !important; }}
-        div[data-testid="stButton"] button:hover, div[data-testid="stDownloadButton"] button:hover { {
+        div[data-testid="stButton"] button:hover, div[data-testid="stDownloadButton"] button:hover {{
             background-color: {theme_main} !important; 
             color: #000000 !important; 
             box-shadow: 0 0 8px {theme_main} !important; 
-        } }
+        }}
         div[data-testid="stDownloadButton"] button:hover p {{ color: #000000 !important; }}
         div[data-testid="stNotification"], div[data-testid="stAlert"] {{ background-color: #000000 !important; color: {theme_main} !important; border: 1px solid {theme_main} !important; }}
     """
@@ -293,7 +292,7 @@ if is_hacker and st.session_state.hacker_console_active:
                 fake_data = "IP_Address,Access_Token,Status\n103.24.51.9,X78S922K,ROOT\n192.168.1.22,KING0622,OVERCLOCK"
                 st.download_button("📥 下載已打包憑證機密明單 (.csv)", fake_data, file_name="compromised_credentials.csv", mime="text/csv")
 
-        # --- 2. 衛星劫持 (附帶打字框動態對焦) ---
+        # --- 2. 衛星劫持 (修正大括號與 getContext) ---
         elif st.session_state.active_panel == "satellite":
             with st.container(border=True):
                 st.subheader("📡 [ORBITAL-LINK] 戰略衛星特種劫持控制台")
@@ -305,27 +304,23 @@ if is_hacker and st.session_state.hacker_console_active:
                 </div>
                 <script>
                 (function(){{
-                    const canvas = document.getElementById('satCanvas'); const ctx = canvas.getContext('2def');
+                    const canvas = document.getElementById('satCanvas'); const ctx = canvas.getContext('2d');
                     let target = "{sat_target}"; let angle = 0; let scale = 1.5; let lockTimer = 0;
                     function draw() {{
-                        const ctx = canvas.getContext('2d');
                         ctx.fillStyle = '#020b08'; ctx.fillRect(0,0,canvas.width,canvas.height);
                         let cx = canvas.width/2; let cy = canvas.height/2;
                         
-                        // 繪製科技網格背景
                         ctx.strokeStyle = 'rgba(0,68,17,0.4)'; ctx.lineWidth = 1;
                         for(let i=0; i<canvas.width; i+=40) {{ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }}
                         for(let j=0; j<canvas.height; j+=40) {{ ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }}
                         
                         lockTimer += 2;
                         if(lockTimer < 100) {{
-                            // 掃描對焦動畫
                             ctx.strokeStyle = '#00ff66'; ctx.beginPath(); ctx.arc(cx, cy, 80 * scale, 0, Math.PI*2); ctx.stroke();
                             ctx.fillStyle = 'rgba(0,255,102,0.1)'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy, 120, angle, angle+0.8); ctx.closePath(); ctx.fill();
                             ctx.fillStyle = '#00ff66'; ctx.font = '14px monospace'; ctx.fillText("[SCANNING & LOCKING]: " + target + "...", 20, 30);
                             scale = 1.0 + Math.sin(lockTimer/10)*0.3; angle += 0.1;
                         }} else {{
-                            // 鎖定成功畫面
                             ctx.strokeStyle = '#ff0033'; ctx.lineWidth = 2;
                             ctx.beginPath(); ctx.arc(cx, cy, 50, 0, Math.PI*2); ctx.stroke();
                             ctx.beginPath(); ctx.moveTo(cx-70, cy); ctx.lineTo(cx+70, cy); ctx.moveTo(cx, cy-70); ctx.lineTo(cx, cy+70); ctx.stroke();
@@ -356,10 +351,10 @@ if is_hacker and st.session_state.hacker_console_active:
                     <h4 id="p5" style="display:none; color:#00ff66; text-shadow:0 0 5px #00ff66;">🟢 虛擬數位迷彩防護盾：100% 全域覆蓋中</h4>
                 </div>
                 <script>
-                setTimeout(()=>{{ document.getElementById('p2').style.display='block'; }}, 500);
-                setTimeout(()=>{{ document.getElementById('p3').style.display='block'; }}, 1200);
-                setTimeout(()=>{{ document.getElementById('p4').style.display='block'; }}, 2000);
-                setTimeout(()=>{{ document.getElementById('p5').style.display='block'; }}, 2600);
+                setTimeout(()=>{ document.getElementById('p2').style.display='block'; }, 500);
+                setTimeout(()=>{ document.getElementById('p3').style.display='block'; }, 1200);
+                setTimeout(()=>{ document.getElementById('p4').style.display='block'; }, 2000);
+                setTimeout(()=>{ document.getElementById('p5').style.display='block'; }, 2600);
                 </script>
                 """
                 st.components.v1.html(wipe_html, height=180)
@@ -407,9 +402,10 @@ if is_hacker and st.session_state.hacker_console_active:
                 with nl_col1:
                     if st.button("🚨 授權發射 (LAUNCH)", use_container_width=True):
                         st.session_state.nuke_detonated = True
+                        st.rerun()
                 with nl_col2:
                     if st.session_state.nuke_detonated:
-                        st.error(f"🚀 戰略導彈已出井！預計打擊座標：{nuke_target.toUpperCase()}")
+                        st.error(f"🚀 戰略導彈已出井！預計打擊座標：{nuke_target.upper()}")
                     else:
                         st.warning("等待最高指揮官按下紅色發射按鈕...")
                         
@@ -425,7 +421,6 @@ if is_hacker and st.session_state.hacker_console_active:
                     function draw() {{
                         ctx.fillStyle = '#0a0102'; ctx.fillRect(0,0,canvas.width,canvas.height);
                         
-                        // 地平線與發射點/目標點
                         ctx.strokeStyle = '#331111'; ctx.lineWidth = 2;
                         ctx.beginPath(); ctx.moveTo(0, 180); ctx.lineTo(canvas.width, 180); ctx.stroke();
                         
@@ -435,17 +430,14 @@ if is_hacker and st.session_state.hacker_console_active:
                         if(isLaunched) {{
                             t += 0.01;
                             if(t <= 1.0) {{
-                                // 拋物線彈道模擬
                                 px = 50 + t * 450;
                                 py = 180 - Math.sin(t * Math.PI) * 120;
                                 ctx.strokeStyle = 'rgba(255, 0, 51, 0.4)'; ctx.setLineDash([4, 4]);
                                 ctx.beginPath(); ctx.moveTo(50, 180); ctx.quadraticCurveTo(275, -20, 500, 180); ctx.stroke();
                                 ctx.setLineDash([]);
                                 
-                                // 飛彈本體
                                 ctx.fillStyle = '#ff0033'; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
                             }} else {{
-                                // 引爆閃爍震撼畫面
                                 ctx.fillStyle = 'rgba(255,0,51,' + (Math.sin(Date.now()/50)+1)/2 + ')';
                                 ctx.beginPath(); ctx.arc(500, 180, 40, 0, Math.PI*2); ctx.fill();
                                 ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText("💥 IMPACT & DETONATED", 220, 100);
