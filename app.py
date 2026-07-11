@@ -217,7 +217,7 @@ if is_hacker and st.session_state.hacker_console_active:
         radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # 100% 安全純字串（完全不使用 f-string，徹底斷絕白屏可能性）
+    # 【徹底修復白屏漏洞】使用純字串替代，並修復原本的字元集錯誤（將 JavaScript 的 split 改用 list 處理，不留在 Python 層面報錯）
     matrix_rain_template = """
     <div style="background:#000; padding:10px; border:2px solid __COLOR__; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -227,7 +227,12 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        const letters = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","X","Y","Z"]; 
+        
+        // 將原先錯誤的 Python 邏輯轉移至前端 JS 處理，避免後端報錯
+        const isKing = __IS_KING__;
+        const charStr = isKing ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑" : "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡";
+        const letters = charStr.split(''); 
+        
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
@@ -245,7 +250,10 @@ if is_hacker and st.session_state.hacker_console_active:
     })();
     </script>
     """
-    matrix_rain_html = matrix_rain_template.replace("__COLOR__", color_theme).replace("__SPEED__", speed_ms)
+    matrix_rain_html = (matrix_rain_template
+                        .replace("__COLOR__", color_theme)
+                        .replace("__SPEED__", speed_ms)
+                        .replace("__IS_KING__", "true" if st.session_state.king_unlocked else "false"))
     st.components.v1.html(matrix_rain_html, height=205)
     
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
@@ -314,7 +322,7 @@ if is_hacker and st.session_state.hacker_console_active:
                 
             st.markdown(f"<p style='font-size:11px; color:{color_theme}; margin-top:6px; line-height:1.4;'>系統狀態: 在線 (ENCRYPTED)<br>中繼節點: SOCKS5://103.24.51.9</p>", unsafe_allow_html=True)
 
-    # 🔑 密碼與指令輸入框（圖1的核心位置，完美固定）
+    # 🔑 密碼與指令輸入框
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input(
@@ -413,7 +421,6 @@ else:
         with st.container(border=True):
             st.subheader("🛰️ 軍用即時聲納雷達監控")
             
-            # 純字串格式化，杜絕大括號引發的白屏問題
             radar_template = """
             <div style="text-align: center; background: __BG__; padding: 10px; border-radius: 8px;">
                 <canvas id="militaryRadar" width="360" height="320"></canvas>
@@ -474,7 +481,7 @@ else:
             
             st.components.v1.html(radar_html, height=340)
 
-        # 系統日誌流通行閘門
+        # 通行閘門
         if is_hacker:
             with st.container(border=True):
                 st.subheader("📟 系統事件日誌流 (Execute)")
