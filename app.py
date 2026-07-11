@@ -23,8 +23,11 @@ KB_FILE = "my_knowledge_base.md"
 DOC_FILE = "cyber_document.md"
 
 if "doc_initialized" not in st.session_state:
-    with open(DOC_FILE, "w", encoding="utf-8") as f:
-        f.write("")
+    try:
+        with open(DOC_FILE, "w", encoding="utf-8") as f:
+            f.write("")
+    except Exception:
+        pass
     st.session_state.doc_initialized = True
 
 for file, default_content in [
@@ -32,8 +35,11 @@ for file, default_content in [
     (KB_FILE, "# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。")
 ]:
     if not os.path.exists(file):
-        with open(file, "w", encoding="utf-8") as f:
-            f.write(default_content)
+        try:
+            with open(file, "w", encoding="utf-8") as f:
+                f.write(default_content)
+        except Exception:
+            pass
 
 # 初始化 Session 狀態
 if "hacker_simulator_unlocked" not in st.session_state:
@@ -48,27 +54,30 @@ if "king_unlocked" not in st.session_state:
     st.session_state.king_unlocked = False
 
 # ==========================================
-# 1. 外部 API 快取與擷取
+# 1. 外部 API 快取與安全擷取 (嚴格防禦卡死)
 # ==========================================
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=600, show_spinner=False)
 def get_formatted_weather():
+    default_weather = "⛅ 26°C / 86% 濕度 + 天氣(多雲/陰天)"
     try:
         url = "https://wttr.in/Gukeng?m&lang=zh-tw&format=%c+氣溫+%t+/+濕度+%h++天氣(%C)"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=2)
         if response.status_code == 200 and "°C" in response.text:
             return response.text.strip()
     except Exception:
-        pass
-    return "⛅ 26°C / 86% 濕度 + 天氣(多雲/陰天)"
+        return default_weather
+    return default_weather
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=600, show_spinner=False)
 def get_google_news():
     try:
         feed_url = "https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
         feed = feedparser.parse(feed_url)
-        return [{"title": entry.title, "link": entry.link} for entry in feed.entries[:5]]
+        if hasattr(feed, 'entries') and feed.entries:
+            return [{"title": entry.title, "link": entry.link} for entry in feed.entries[:5]]
     except Exception:
         return []
+    return []
 
 # ==========================================
 # 2. 側邊欄控制中心 (Sidebar Control)
@@ -217,7 +226,6 @@ if is_hacker and st.session_state.hacker_console_active:
         radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # 【徹底修復白屏漏洞】使用純字串替代，並修復原本的字元集錯誤（將 JavaScript 的 split 改用 list 處理，不留在 Python 層面報錯）
     matrix_rain_template = """
     <div style="background:#000; padding:10px; border:2px solid __COLOR__; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -228,7 +236,6 @@ if is_hacker and st.session_state.hacker_console_active:
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
         
-        // 將原先錯誤的 Python 邏輯轉移至前端 JS 處理，避免後端報錯
         const isKing = __IS_KING__;
         const charStr = isKing ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑" : "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡";
         const letters = charStr.split(''); 
@@ -355,6 +362,8 @@ else:
             if news_list:
                 for i, news in enumerate(news_list, 1):
                     st.markdown(f"{i}. [{news['title']}]({news['link']})")
+            else:
+                st.caption("📡 暫時無法獲取即時新聞或連線超時。")
 
     st.write("") 
     col_left, col_right = st.columns([3, 2])
@@ -364,8 +373,13 @@ else:
             st.subheader("📝 賽博文書終端 (Word & PPT 整合模組)")
             doc_tab1, doc_tab2 = st.tabs(["📄 Word 編輯模式", "📺 PPT 簡報播放模式"])
             
-            with open(DOC_FILE, "r", encoding="utf-8") as f:
-                doc_content = f.read()
+            doc_content = ""
+            if os.path.exists(DOC_FILE):
+                try:
+                    with open(DOC_FILE, "r", encoding="utf-8") as f:
+                        doc_content = f.read()
+                except Exception:
+                    pass
                 
             with doc_tab1:
                 st.caption("利用 Markdown 編寫文件，使用 `---` 作為 PPT 的換頁符號。")
@@ -374,10 +388,13 @@ else:
                 w_col1, w_col2, w_col3 = st.columns(3)
                 with w_col1:
                     if st.button("💾 儲存最新文本"):
-                        with open(DOC_FILE, "w", encoding="utf-8") as f:
-                            f.write(edited_doc)
-                        st.toast("文件已成功寫入核心矩陣！", icon="💾")
-                        st.rerun()
+                        try:
+                            with open(DOC_FILE, "w", encoding="utf-8") as f:
+                                f.write(edited_doc)
+                            st.toast("文件已成功寫入核心矩陣！", icon="💾")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"寫入失敗: {e}")
                 with w_col2:
                     st.download_button("📥 匯出為 .md 檔案", data=edited_doc, file_name="Cyber_Report.md", mime="text/markdown")
                 with w_col3:
@@ -409,11 +426,21 @@ else:
         def render_sticky_notes():
             with st.container(border=True):
                 st.subheader("⚡ 閃電收件匣 (Capture)")
-                with open(NOTE_FILE, "r", encoding="utf-8") as f: current_notes = f.read()
+                current_notes = ""
+                if os.path.exists(NOTE_FILE):
+                    try:
+                        with open(NOTE_FILE, "r", encoding="utf-8") as f: 
+                            current_notes = f.read()
+                    except Exception:
+                        pass
                 user_notes = st.text_area("隨手記下目前的雜念...", value=current_notes, height=100, key="sticky_notes_input")
                 if st.button("💾 儲存連接筆記"):
-                    with open(NOTE_FILE, "w", encoding="utf-8") as f: f.write(user_notes)
-                    st.toast("筆記已寫入本地端檔案！", icon="💾")
+                    try:
+                        with open(NOTE_FILE, "w", encoding="utf-8") as f: 
+                            f.write(user_notes)
+                        st.toast("筆記已寫入本地端檔案！", icon="💾")
+                    except Exception:
+                        pass
 
         render_sticky_notes()
 
