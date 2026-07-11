@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v8.2",
+    page_title="Cyber Hacker Workstation v8.4",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -84,7 +84,7 @@ with st.sidebar:
     )
     is_hacker = "Hacker" in ui_mode
 
-    # 如果離開駭客模式，關閉所有解鎖狀態
+    # 如果非駭客模式，清空狀態
     if not is_hacker:
         st.session_state.hacker_console_active = False
         st.session_state.king_unlocked = False
@@ -183,7 +183,7 @@ st.components.v1.html("""
 
 
 # ========================================================================
-# 🚨 關鍵分流邏輯：若解鎖控制台，直接進入全螢幕控制台 (畫面 A)
+# 🚨 畫面分流：全螢幕控制台 (畫面 A)
 # ========================================================================
 if is_hacker and st.session_state.hacker_console_active:
     
@@ -204,23 +204,21 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 動態變色主題定義
+    # 動態變色變數設定
     if st.session_state.king_unlocked:
         speed_ms = "12"
         color_theme = "#ff0033"
-        js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         radar_speed = "0.22"
         radar_color = "rgba(255, 0, 50, 0.25)"
         radar_line_color = "#ff0033"
     else:
         speed_ms = "35"
         color_theme = "#00ff66"
-        js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         radar_speed = "0.06"
         radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # 頂部矩陣代碼雨 (大括號已全數安全雙重轉義 {{ }})
+    # 頂部矩陣代碼雨 (徹底修復：不透過 Python 變數傳遞字串，完全由 JS 本地定義，100% 絕不報錯白屏)
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -230,7 +228,7 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        const letters = "{js_char_pool}".split(""); 
+        const letters = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","X","Y","Z"]; 
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
@@ -250,7 +248,7 @@ if is_hacker and st.session_state.hacker_console_active:
     """
     st.components.v1.html(matrix_rain_html, height=205)
     
-    # 控制台主要三大區塊
+    # 控制台功能區
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     with h_col1:
         with st.container(border=True):
@@ -316,7 +314,7 @@ if is_hacker and st.session_state.hacker_console_active:
                 
             st.markdown(f"<p style='font-size:11px; color:{color_theme}; margin-top:6px; line-height:1.4;'>系統狀態: 在線 (ENCRYPTED)<br>中繼節點: SOCKS5://103.24.51.9</p>", unsafe_allow_html=True)
 
-    # 🛠️ 【完整修復】重新把密碼輸入框放回「控制台 (畫面 A)」的最下方！這樣才能完美呈現圖 1
+    # 🔑 密碼與指令輸入框（完美固定出現在控制台最下方）
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input(
@@ -417,6 +415,7 @@ else:
             is_hacker_js = "true" if is_hacker else "false"
             pomo_speed_js = "0.04" if st.session_state.pomodoro_active else "0.015"
             
+            # 軍用雷達
             radar_html = f"""
             <div style="text-align: center; background: { '#03120E' if is_hacker else '#f7f9fa' }; padding: 10px; border-radius: 8px;">
                 <canvas id="militaryRadar" width="360" height="320"></canvas>
@@ -462,7 +461,7 @@ else:
             """
             st.components.v1.html(radar_html, height=340)
 
-        # 系統日誌流通行閘門 (畫面 B 用來進入控制台的入口)
+        # 系統日誌流通行閘門 (主畫面進入控制台按鈕與通道)
         if is_hacker:
             with st.container(border=True):
                 st.subheader("📟 系統事件日誌流 (Execute)")
