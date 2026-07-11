@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v5.0",
+    page_title="Cyber Hacker Workstation v5.5",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -44,6 +44,8 @@ if "pomodoro_active" not in st.session_state:
     st.session_state.pomodoro_active = False
 if "hacker_console_active" not in st.session_state:
     st.session_state.hacker_console_active = False
+if "king_unlocked" not in st.session_state:
+    st.session_state.king_unlocked = False
 
 # ==========================================
 # 1. 外部 API 快取與擷取
@@ -82,9 +84,10 @@ with st.sidebar:
     )
     is_hacker = "Hacker" in ui_mode
 
-    # 如果離開駭客模式，自動關閉全螢幕控制台
+    # 如果離開駭客模式，清空控制台狀態
     if not is_hacker:
         st.session_state.hacker_console_active = False
+        st.session_state.king_unlocked = False
 
     st.markdown("---")
     st.subheader("⏱️ 賽博脈衝番茄鐘")
@@ -183,61 +186,84 @@ st.components.v1.html("""
 if is_hacker and st.session_state.hacker_console_active:
     
     # ------------------------------------------
-    # 【畫面 A】全螢幕全域駭客控制台
+    # 【畫面 A】全螢幕全域駭客控制台 / 終極控制台
     # ------------------------------------------
-    st.title("📟 終極矩陣核心控制台 (OVERRIDE ACTIVE)")
+    if st.session_state.king_unlocked:
+        st.title("👑 原版終極駭客控制台 (ROOT TERMINAL OVERCLOCK)")
+    else:
+        st.title("📟 終極矩陣核心控制台 (OVERRIDE ACTIVE)")
     
-    if st.button("↩️ 關閉控制台並返回工作台"):
-        st.session_state.hacker_console_active = False
-        st.rerun()
-        
+    # 頂部返回與狀態按鈕
+    c_top1, c_top2 = st.columns([3, 1])
+    with c_top1:
+        if st.button("↩️ 關閉控制台並返回工作台"):
+            st.session_state.hacker_console_active = False
+            st.session_state.king_unlocked = False
+            st.rerun()
+    with c_top2:
+        if st.session_state.king_unlocked:
+            st.error("⚠️ CORE MODE: KING-REVOLUTION")
+            
     st.markdown("---")
     
-    # 放一個全螢幕的 Matrix 密碼雨 canvas 當作背景頂部裝飾
-    matrix_rain_html = """
-    <div style="background:#000; padding:10px; border:2px solid #00ff66; border-radius:8px; margin-bottom:20px;">
-        <canvas id="fullscreenRain" style="width:100%; height:150px; background:#000;"></canvas>
+    # 密碼雨背景裝飾 (若密碼解鎖，瀑布速度與密度加倍)
+    speed_ms = "15" if st.session_state.king_unlocked else "35"
+    color_theme = "#ff0033" if st.session_state.king_unlocked else "#00ff66"
+    char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑".split('') if st.session_state.king_unlocked else '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙'.split('')
+    
+    matrix_rain_html = f"""
+    <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
+        <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
     </div>
     <script>
-    (function(){
+    (function(){{
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = 150;
-        const letters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙'.split('');
+        canvas.width = window.innerWidth; canvas.height = 180;
+        const letters = {char_pool};
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
         
-        function draw() {
+        function draw() {{
             ctx.fillStyle = 'rgba(0, 0, 0, 0.06)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00ff66'; ctx.font = fontSize + 'px monospace';
-            for(let i=0; i<drops.length; i++) {
+            ctx.fillStyle = '{color_theme}'; ctx.font = fontSize + 'px monospace';
+            for(let i=0; i<drops.length; i++) {{
                 const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i*fontSize, drops[i]*fontSize);
                 if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
-            }
-        }
-        setInterval(draw, 30);
-    })();
+            }}
+        }}
+        setInterval(draw, {speed_ms});
+    }})();
     </script>
     """
-    st.components.v1.html(matrix_rain_html, height=175)
+    st.components.v1.html(matrix_rain_html, height=205)
     
-    # 主主控台排版 (分成三直欄)
+    # 主主控台排版 (三直欄數據監控)
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     
     with h_col1:
         with st.container(border=True):
             st.subheader("📡 特工節點安全通訊")
-            st.metric("核心跳轉節點", "Proxy-Node-9", "+413ms")
-            st.metric("防禦壁壘狀態", "BYPASSED", "100%")
+            if st.session_state.king_unlocked:
+                st.error("⚠️ SYSTEM STATUS: OVERCLOCKED")
+                st.metric("權限等級", "ROOT / KING", "MAX")
+                st.metric("主機核心頻率", "8.4 GHz", "+500%")
+            else:
+                st.subheader("📡 特工節點安全通訊")
+                st.metric("核心跳轉節點", "Proxy-Node-9", "+413ms")
+                st.metric("防禦壁壘狀態", "BYPASSED", "100%")
             st.progress(1.0, text="安全矩陣核心全域覆寫已完成")
             
     with h_col2:
         with st.container(border=True):
             st.subheader("🛰️ 雷達追蹤 (極速脈衝模式)")
-            # 複製一個極速旋繞的雷達
+            radar_speed = "0.2" if st.session_state.king_unlocked else "0.08"
+            radar_color = "rgba(255, 0, 50, 0.3)" if st.session_state.king_unlocked else "rgba(0, 235, 212, 0.2)"
+            radar_line_color = "#ff0033" if st.session_state.king_unlocked else "#004411"
+            
             radar_html_fs = f"""
             <div style="text-align: center; background: #03120E; padding: 5px; border-radius: 8px;">
                 <canvas id="radarFS" width="300" height="230"></canvas>
@@ -250,13 +276,13 @@ if is_hacker and st.session_state.hacker_console_active:
                 const cx = canvas.width / 2; const cy = canvas.height / 2;
                 function draw() {{
                     ctx.fillStyle = '#03120E'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.strokeStyle = '#004411';
+                    ctx.strokeStyle = '{radar_line_color}';
                     for(let r = 20; r <= 100; r += 20) {{
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
                     }}
-                    ctx.fillStyle = 'rgba(0, 235, 212, 0.2)'; ctx.beginPath(); ctx.moveTo(cx, cy);
+                    ctx.fillStyle = '{radar_color}'; ctx.beginPath(); ctx.moveTo(cx, cy);
                     ctx.arc(cx, cy, 100, angle, angle + 0.5); ctx.closePath(); ctx.fill();
-                    angle += 0.08; // 超高旋轉速度
+                    angle += {radar_speed}; 
                     requestAnimationFrame(draw);
                 }}
                 draw();
@@ -268,10 +294,11 @@ if is_hacker and st.session_state.hacker_console_active:
     with h_col3:
         with st.container(border=True):
             st.subheader("☣️ 系統後台事件解密流")
-            console_log_html = """
-            <div id="fullConsole" style="background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:10px; height:210px; overflow:hidden;"></div>
+            log_interval = "150" if st.session_state.king_unlocked else "400"
+            console_log_html = f"""
+            <div id="fullConsole" style="background:#000; color:{color_theme}; font-family:monospace; font-size:11px; padding:10px; height:210px; overflow:hidden;"></div>
             <script>
-            (function(){
+            (function(){{
                 const box = document.getElementById('fullConsole');
                 const logs = [
                     "[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...",
@@ -280,24 +307,46 @@ if is_hacker and st.session_state.hacker_console_active:
                     "[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE",
                     "[SUCCESS] EXFILTRATING CORE COMPONENT DOCS..."
                 ];
-                setInterval(() => {
+                const king_logs = [
+                    "[KING] BYPASSING INTEL AMTI GATE...",
+                    "[KING] DEPLOYING PROTOCOL 1030622...",
+                    "[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...",
+                    "[ROOT] ACCESS GRANTED TO ALL SATELLITES..."
+                ];
+                const activePool = { "king_logs.concat(logs)" if st.session_state.king_unlocked else "logs" };
+                setInterval(() => {{
                     let div = document.createElement('div');
-                    div.innerText = "[" + new Date().toLocaleTimeString() + "] " + logs[Math.floor(Math.random()*logs.length)];
+                    div.innerText = "[" + new Date().toLocaleTimeString() + "] " + activePool[Math.floor(Math.random()*activePool.length)];
                     box.appendChild(div);
                     if(box.childNodes.length > 12) box.removeChild(box.firstChild);
                     box.scrollTop = box.scrollHeight;
-                }, 400);
-            })();
+                }}, {log_interval});
+            }})();
             </script>
             """
             st.components.v1.html(console_log_html, height=230)
 
+    # 底部指令打字框模組
+    st.write("")
+    with st.container(border=True):
+        cmd_input = st.text_input(
+            "⌨️ [SYS-OVERRIDE] 核心指令輸入端 :", 
+            key="hacker_cmd_terminal",
+            placeholder="請輸入核心交互指令... (提示: 輸入通行密碼以彈出原版終極控制台)",
+        )
+        if cmd_input:
+            if cmd_input.strip() == "king1030622":
+                st.session_state.king_unlocked = True
+                st.toast("👑 通行密碼驗證通過！原版終極控制台已全域超頻載入！", icon="🔥")
+                st.rerun()
+            else:
+                st.toast(f"執行未授權本地指令: {cmd_input}", icon="📟")
+
 else:
     # ------------------------------------------
-    # 【畫面 B】標準高效工作台 (原本的畫面)
+    # 【畫面 B】標準高效工作台 (原本的日常畫面)
     # ------------------------------------------
     
-    # 第一層：即時情報 Bento Grid
     col_info1, col_info2 = st.columns([1, 2])
     with col_info1:
         with st.container(border=True):
@@ -314,7 +363,6 @@ else:
 
     st.write("") 
 
-    # 第二層：核心工作區（左：文書與筆記 / 右：雷達與模擬器）
     col_left, col_right = st.columns([3, 2])
 
     with col_left:
@@ -456,7 +504,6 @@ else:
         # ==========================================
         if is_hacker:
             with st.container(border=True):
-                # 狀況 1：特工模擬器已解鎖
                 if st.session_state.hacker_simulator_unlocked:
                     st.subheader("🚨 極客黑客終極模擬器 (Matrix Core)")
                     hacker_simulator_html = """
@@ -482,23 +529,21 @@ else:
                     """
                     st.components.v1.html(hacker_simulator_html, height=150)
                     
-                    # 下方按鈕控制排 (包含重新鎖定與進入全螢幕控制台的「駭客」按鈕)
                     b_col1, b_col2 = st.columns(2)
                     with b_col1:
                         if st.button("🔒 重新鎖定模擬器"):
                             st.session_state.hacker_simulator_unlocked = False
                             st.rerun()
                     with b_col2:
-                        if st.button("⚡ 進入全域控制台", key="launch_hacker_panel_unlocked"):
+                        if st.button("⚡ 進入全域控制台", key="launch_panel_unlocked"):
                             st.session_state.hacker_console_active = True
                             st.rerun()
 
-                # 狀況 2：未解鎖狀態（顯示基本日誌流與按鈕）
                 else:
                     st.subheader("📟 系統事件日誌流 (Execute)")
                     
                     log_time = datetime.now().strftime('%H:%M:%S')
-                    st.info(f"[{log_time}] [KERNEL] 權限安全：日誌子系統已在駭客模式下完全啟動。\n[{log_time}] [POMODORO] 脈衝鎖定裝置就緒。")
+                    st.info(f"[{log_time}] [KERNEL] 密鑰鎖定中。駭客專屬控制台按鈕已就緒。\n[{log_time}] [SECURITY] 隔離區未偵測到威脅。")
                     
                     btn_col1, btn_col2 = st.columns(2)
                     with btn_col1:
@@ -506,7 +551,6 @@ else:
                             st.session_state.hacker_simulator_unlocked = True
                             st.rerun()
                     with btn_col2:
-                        # 未解鎖狀態下也保留直接進入控制台的按鈕
-                        if st.button("⚡ 進入全域控制台", key="launch_hacker_panel_locked"):
+                        if st.button("⚡ 進入全域控制台", key="launch_panel_locked"):
                             st.session_state.hacker_console_active = True
                             st.rerun()
