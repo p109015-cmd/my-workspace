@@ -11,7 +11,7 @@ from datetime import datetime
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Military Hacker Station v3.2",
+    page_title="Military Hacker Station v3.5",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -28,12 +28,23 @@ if not os.path.exists(KB_FILE):
     with open(KB_FILE, "w", encoding="utf-8") as f:
         f.write("# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。")
 
+# ==========================================
+# 1. GitHub 概念密碼驗證核心邏輯 (解決解鎖沒反應問題)
+# ==========================================
 # 初始化密碼解鎖狀態
 if "hacker_simulator_unlocked" not in st.session_state:
     st.session_state.hacker_simulator_unlocked = False
 
+# 當檢測到 URL 參數或狀態中有解鎖信號時立即處理
+query_params = st.query_params
+if "github_token_auth" in query_params and query_params["github_token_auth"] == "1030622":
+    st.session_state.hacker_simulator_unlocked = True
+    # 清除網址後綴避免重複觸發
+    st.query_params.clear()
+    st.toast("🚨 [GITHUB AUTH SUCCESS] 終極駭客模擬器已成功解鎖！", icon="🚨")
+
 # ==========================================
-# 1. 外部 API 快取與擷取 + 天氣中文與格式化處理
+# 2. 外部 API 快取與擷取 + 天氣中文與格式化處理
 # ==========================================
 @st.cache_data(ttl=600)
 def get_formatted_weather():
@@ -61,7 +72,7 @@ def get_formatted_weather():
                 else:
                     weather_zh = condition # 若無對應則保留原文
                 
-                # 去除溫度中可能多餘的加號，並標準化單位
+                # 去除溫度中可能多餘的加號
                 temp = temp.replace("+", "").strip()
                 # 組合使用者要求的格式：當地氣溫/濕度+天氣(晴朗/多雲/......)+風速
                 return f"{icon} {temp} / {humidity} 濕度 + 天氣({weather_zh}) + 風速 {wind}"
@@ -79,7 +90,7 @@ def get_google_news():
         return []
 
 # ==========================================
-# 2. 側邊欄控制中心 (Sidebar Control)
+# 3. 側邊欄控制中心 (Sidebar Control)
 # ==========================================
 with st.sidebar:
     st.title("🎛️ 控制中心")
@@ -109,19 +120,22 @@ radar_data = {
 }
 
 # ==========================================
-# 3. 處理 F2 密碼解鎖後台接收
-# ==========================================
-secret_trigger = st.text_input("Secret Trigger", key="secret_trigger", label_visibility="collapsed")
-if secret_trigger == "1030622":
-    st.session_state.hacker_simulator_unlocked = True
-    st.toast("🚨 [ACCESS GRANTED] 終極駭客模擬器已解鎖！", icon="🚨")
-
-# ==========================================
-# 4. 全域 CSS 與 鍵盤事件 JS 注入 (F1 & F2 監聽)
+# 4. 全域 CSS 強力黑化 (包含徹底抹除頂部大白條)
 # ==========================================
 hacker_css = ""
 if is_hacker:
     hacker_css = """
+        /* 🛠️ 修正點：強力將最頂端官方 Header 白條、選單按鈕完全漆成純黑 */
+        header[data-testid="stHeader"], [data-testid="stHeader"] {
+            background-color: #0d0d0d !important;
+            background: #0d0d0d !important;
+            border-bottom: 1px solid #004411 !important;
+        }
+        header[data-testid="stHeader"] *, [data-testid="stHeader"] * {
+            color: #00ff66 !important;
+            fill: #00ff66 !important;
+        }
+
         /* 全域背景與基礎組件綠化 */
         .stApp { background-color: #0d0d0d !important; color: #00ff66 !important; font-family: 'Courier New', monospace !important; }
         [data-testid="stSidebar"] { background-color: #1a1a1a !important; color: #00ff66 !important; border-right: 1px solid #00ff66; }
@@ -130,7 +144,11 @@ if is_hacker:
         textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         
-        /* 🛠️ 修正點：深度強制按鈕改為純黑底＋螢光綠框線 */
+        /* 優化新聞連結顏色，避免黑底刺眼 */
+        a { color: #88ccff !important; text-decoration: none !important; }
+        a:hover { color: #00ff66 !important; text-decoration: underline !important; }
+
+        /* 強制按鈕改為純黑底＋螢光綠框線 */
         div[data-testid="stButton"] button {
             background-color: #000000 !important;
             color: #00ff66 !important;
@@ -145,7 +163,7 @@ if is_hacker:
             box-shadow: 0 0 10px #00ff66 !important;
         }
 
-        /* 🛠️ 修正點：強力阻擊 st.info() 穿幫白底，將通知區塊徹底變為極客黑底綠字 */
+        /* 強力阻擊 st.info() 穿幫白底，將通知區塊徹底變為極客黑底綠字 */
         div[data-testid="stNotification"], div[data-testid="stAlert"] {
             background-color: #000000 !important;
             color: #00ff66 !important;
@@ -162,41 +180,44 @@ if is_hacker:
 
 st.markdown(f"<style>{hacker_css}</style>", unsafe_allow_html=True)
 
-st.components.v1.html(f"""
+# ==========================================
+# 5. 鍵盤事件與 GitHub API 模擬通訊 JS 注入 (F1 & F2 監聽)
+# ==========================================
+st.components.v1.html("""
     <script>
     const doc = window.parent.document;
     
     doc.removeEventListener('keydown', window.hackerKeyListener);
-    window.hackerKeyListener = function(e) {{
-        if (e.key === 'F1') {{
+    window.hackerKeyListener = function(e) {
+        if (e.key === 'F1') {
             e.preventDefault(); 
             const radios = doc.querySelectorAll('input[name="ui_mode_select"]');
-            if (radios.length >= 2) {{
+            if (radios.length >= 2) {
                 if (radios[0].checked) radios[1].click();
                 else radios[0].click();
-            }}
-        }}
-        if (e.key === 'F2') {{
+            }
+        }
+        if (e.key === 'F2') {
             e.preventDefault();
-            let password = prompt("🔑 [SECURITY AUTHENTICATION] 請輸入特工解鎖密碼:");
-            if (password !== null) {{
-                const inputs = doc.querySelectorAll('input[aria-label="Secret Trigger"]');
-                if (inputs.length > 0) {{
-                    inputs[0].value = password;
-                    inputs[0].dispatchEvent(new Event('input', {{ bubbles: true }}));
-                    inputs[0].dispatchEvent(new Event('change', {{ bubbles: true }}));
-                }}
-            }}
-        }}
-    }};
+            
+            // 彈出基於 GitHub Token 認證邏輯的輸入框
+            let token = prompt("🔑 [GITHUB SECURITY OAUTH] Enter github.com Personal Access Token:");
+            if (token !== null && token.trim() !== "") {
+                // 利用前端 URL 變更直接繞過 Streamlit Input 容易丟失值的問題，100% 成功觸發後端驗證
+                const url = new URL(window.parent.location.href);
+                url.searchParams.set('github_token_auth', token.trim());
+                window.parent.location.href = url.href;
+            }
+        }
+    };
     doc.addEventListener('keydown', window.hackerKeyListener);
     </script>
 """, height=0)
 
 # ==========================================
-# 5. 主畫面排版 (Main UI Layout)
+# 6. 主畫面排版 (Main UI Layout)
 # ==========================================
-st.title("⚡ 高效個人工作台")
+st.title("⚡ 高效率個人工作台")
 st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 軍用雷達＆極客解鎖完全體")
 
 # 第一層：即時情報 Bento Grid
@@ -204,8 +225,8 @@ col_info1, col_info2 = st.columns([1, 2])
 with col_info1:
     with st.container(border=True):
         st.subheader("📍 即時環境 (雲林古坑)")
-        st.markdown(f"**wttr.in 觀測數據**")
-        st.info(get_formatted_weather()) # 天氣直接顯示在綠框黑底內 (在駭客模式下)
+        st.markdown(f"**wttr.in 起始數據**")
+        st.info(get_formatted_weather()) # 天氣直接顯示在綠框黑底內
 
 with col_info2:
     with st.container(border=True):
@@ -230,7 +251,7 @@ with col_left:
             with open(NOTE_FILE, "r", encoding="utf-8") as f:
                 current_notes = f.read()
             user_notes = st.text_area("隨手記下目前的雜念、任務、待辦...", value=current_notes, height=150, key="sticky_notes_input")
-            if st.button("💾 儲存隨身筆記", key="save_notes_btn"):
+            if st.button("💾 儲存連接筆記", key="save_notes_btn"):
                 with open(NOTE_FILE, "w", encoding="utf-8") as f: f.write(user_notes)
                 st.toast("隨身便利貼已安全寫入本地端檔案！", icon="💾")
 
@@ -312,7 +333,7 @@ with col_right:
                     let y1 = cy + maxRadius * Math.sin(rad);
                     let x2 = cx + (maxRadius - (a % 30 === 0 ? 8 : 4)) * Math.cos(rad);
                     let y2 = cy + (maxRadius - (a % 30 === 0 ? 8 : 4)) * Math.sin(rad);
-                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); stroke();
                 }}
                 
                 ctx.beginPath();
@@ -392,6 +413,7 @@ with col_right:
             (function(){
                 const consoleBox = document.getElementById('simConsole');
                 const logPool = [
+                    "[OK] AUTHORIZED VIA GITHUB OAUTH CLIENT...",
                     "[OK] CONNECTED TO CORE MAIN_FRAME SERVER...",
                     "[INFO] DECRYPTING BLOCKCHAIN SYNC INDEX...",
                     "[WARN] FIREWALL DETECTED: BYPASSING PROTOCOL SEC-9",
@@ -401,7 +423,7 @@ with col_right:
                     "[PACKET] INBOUND TRAFFIC FROM IP 103.6.22.109 LOCKED",
                     "--------------------------------------------------",
                     ">> LOADING MATRIX QUANTUM ALGORITHM...",
-                    ">> DOWNLOADING ENCRYPTED DATA STREAM... [78% completed]",
+                    ">> DOWNLOADING ENCRYPTED DATA STREAM... [100% SECURE]",
                     ">> INJECTING PAYLOAD INTO KERNEL LAND (ROOT_ACCESS)"
                 ];
                 
@@ -436,7 +458,7 @@ with col_right:
             logs = [
                 f"[{log_time}] {mode_tag} 心流狀態儀表板已成功掛載。",
                 f"[{log_time}] [IO_SERVER] 讀取儲存檔案完畢。",
-                f"[{log_time}] [NETWORK] 天氣與新聞快取同步中。",
+                f"[{log_time}] [GITHUB_OAUTH] 攔截器已就緒，等待 F2 連接校驗。",
                 f"[{log_time}] [JS_KERNEL] F1(切換)/F2(解鎖) 核心監聽器已安全就緒。"
             ]
             
