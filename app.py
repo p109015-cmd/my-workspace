@@ -1,4 +1,5 @@
-import streamlit as st
+
+     import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
@@ -12,7 +13,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v5.9",
+    page_title="Cyber Hacker Workstation v6.2",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -74,7 +75,7 @@ def get_google_news():
 # 2. 側邊欄控制中心 (Sidebar Control)
 # ==========================================
 with st.sidebar:
-    st.title("🎛️ 控制中心")
+    st.title("n🎛️ 控制中心")
     
     ui_mode = st.radio(
         "切換工作台模式 (或按 F1 鍵)",
@@ -133,17 +134,13 @@ if is_hacker:
             border: 1px solid #00ff66 !important; 
             font-weight: bold !important; 
         }
-        div[data-testid="stDownloadButton"] button p {
-            color: #00ff66 !important;
-        }
+        div[data-testid="stDownloadButton"] button p { color: #00ff66 !important; }
         div[data-testid="stButton"] button:hover, div[data-testid="stDownloadButton"] button:hover { 
             background-color: #00ff66 !important; 
             color: #000000 !important; 
             box-shadow: 0 0 8px #00ff66 !important; 
         }
-        div[data-testid="stDownloadButton"] button:hover p {
-            color: #000000 !important;
-        }
+        div[data-testid="stDownloadButton"] button:hover p { color: #000000 !important; }
         div[data-testid="stNotification"], div[data-testid="stAlert"] { background-color: #000000 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; }
     """
 
@@ -167,7 +164,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# F1 鍵相容層
+# F1 鍵切換模式相容層
 st.components.v1.html("""
     <script>
     const handleF1 = (e) => {
@@ -187,7 +184,7 @@ st.components.v1.html("""
 
 
 # ==========================================
-# 🛑 分流判斷：是否進入「全螢幕終極駭客控制台」畫面
+# 🛑 分流判斷：是否切換至全螢幕「終極控制台」畫面
 # ==========================================
 if is_hacker and st.session_state.hacker_console_active:
     
@@ -211,27 +208,25 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 採用安全無 split('') 邏輯
+    # 【徹底修復 Bug】使用純英文字串與正確的 Javascript 傳遞法，防範 split 崩潰
     if st.session_state.king_unlocked:
         speed_ms = "12"
-        color_theme = "#ff0033"
-        char_pool = list("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑🔱")
+        color_theme = "#ff0033" # 密碼正確直接全畫面超頻變紅！
+        js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         js_logs_array = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[OVERCLOCK] SYSTEM HEATING UP TO 94C...']"
         radar_speed = "0.25"
         radar_color = "rgba(255, 0, 50, 0.3)"
         radar_line_color = "#ff0033"
     else:
         speed_ms = "35"
-        color_theme = "#00ff66"
-        char_pool = list("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙")
+        color_theme = "#00ff66" # 預設為綠色
+        js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         js_logs_array = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
         radar_speed = "0.08"
         radar_color = "rgba(0, 235, 212, 0.2)"
         radar_line_color = "#004411"
 
-    js_raw_string = "".join(char_pool)
-
-    # HTML 密碼雨
+    # HTML5 Canvas 密碼雨流 (修正相容性問題)
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -241,7 +236,7 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        const letters = "{js_raw_string}".split(""); 
+        const letters = "{js_char_pool}".split(""); 
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
@@ -306,42 +301,44 @@ if is_hacker and st.session_state.hacker_console_active:
 
     with h_col3:
         with st.container(border=True):
-            st.subheader("☣️ 系統後台事件解密流")
-            console_log_html = f"""
-            <div id="fullConsole" style="background:#000; color:{color_theme}; font-family:monospace; font-size:11px; padding:10px; height:210px; overflow:hidden;"></div>
-            <script>
-            (function(){{
-                const box = document.getElementById('fullConsole');
-                const activePool = {js_logs_array};
-                setInterval(() => {{
-                    let div = document.createElement('div');
-                    div.innerText = "[" + new Date().toLocaleTimeString() + "] " + activePool[Math.floor(Math.random()*activePool.length)];
-                    box.appendChild(div);
-                    if(box.childNodes.length > 12) box.removeChild(box.firstChild);
-                    box.scrollTop = box.scrollHeight;
-                }}, 300);
-            }})();
-            </script>
-            """
-            st.components.v1.html(console_log_html, height=230)
+            # 載入先前設計的戰略後門操控模組區塊
+            st.subheader("💀 [GHOST-NETWORK]")
+            st.markdown("""
+            <div style='border: 1px solid #00ff66; padding: 10px; border-radius: 5px; background-color: #051a10;'>
+                <p style='color: #00ff66; font-weight: bold; margin-bottom: 5px;'>[ 戰略後門操控模組 ]</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            b1 = st.button("📁 數據導出 (Dump User Credentials)", use_container_width=True)
+            b2 = st.button("📡 衛星劫持 (Hijack Orbital Satellite)", use_container_width=True)
+            b3 = st.button("🎭 換臉偽裝 (Wipe Terminal Traces)", use_container_width=True)
+            b4 = st.button("💣 自毀程序 (Nuke Mainframe Server)", use_container_width=True)
+            b5 = st.button("☢️ 引爆核彈 (Launch Strategic Nuke)", use_container_width=True)
+            
+            if b5:
+                st.toast("⚠️ CRITICAL: 戰略武器引爆指令已向中繼節點發送！", icon="☢️")
+            elif b1 or b2 or b3 or b4:
+                st.toast("指令發送成功，執行中...", icon="⚡")
+                
+            st.caption("系統狀態: 在線 (ENCRYPTED) | 中繼節點: SOCKS5://103.24.51.9")
 
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input(
             "⌨️ [SYS-OVERRIDE] 核心指令輸入端 :", 
             key="hacker_cmd_terminal",
-            placeholder="請輸入核心交互指令...",
+            placeholder="請輸入核心交互指令（例如輸入密碼切換模式）...",
         )
-        # 為了防止重複輸入時卡住，如果在全螢幕模式下再次輸入密碼，提供手動重整機制
         if cmd_input.strip() == "king1030622":
             st.session_state.king_unlocked = True
+            st.toast("👑 終極皇權模式已啟用！", icon="👑")
             st.rerun()
         elif cmd_input:
-            st.toast(f"執行未授權本地指令: {cmd_input}", icon="📟")
+            st.toast(f"執行指令: {cmd_input}", icon="📟")
 
 else:
     # ------------------------------------------
-    # 【畫面 B】標準高效工作台
+    # 【畫面 B】標準高效工作台面
     # ------------------------------------------
     col_info1, col_info2 = st.columns([1, 2])
     with col_info1:
@@ -460,21 +457,19 @@ else:
             """
             st.components.v1.html(radar_html, height=340)
 
+        # 密碼輸入閘門
         if is_hacker:
             with st.container(border=True):
-                # 【新增雙保險邏輯】：建立手動解鎖覆寫按鈕
                 st.subheader("📟 系統事件日誌流 (Execute)")
                 
-                # 安全密碼監聽器
-                cmd_box = st.text_input("🔑 輸入終極通行密碼以解鎖隱藏控制台：", key="main_hacker_gate", type="password", placeholder="請在此輸入 king1030622 ...")
+                # 保留最核心的密碼輸入觸發器
+                cmd_box = st.text_input("🔑 輸入終極通行密碼解鎖全螢幕隱藏控制台：", key="main_hacker_gate", type="password", placeholder="請在此輸入密碼...")
                 
                 if cmd_box.strip() == "king1030622":
                     st.session_state.king_unlocked = True
                     st.session_state.hacker_console_active = True
-                    
-                    # 雙保險按鈕：點擊即可 100% 強制重整切換畫面
-                    if st.button("👑 密碼正確！點擊此處立即強制解鎖原版終極控制台", type="primary"):
-                        st.rerun()
+                    st.success("👑 密碼正確！正在強制全螢幕跳轉解鎖...")
+                    st.rerun()
                 
                 st.markdown("---")
                 if st.session_state.hacker_simulator_unlocked:
