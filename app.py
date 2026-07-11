@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v4.0",
+    page_title="Cyber Hacker Workstation v4.1",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -20,12 +20,13 @@ st.set_page_config(
 
 NOTE_FILE = "sticky_notes.txt"
 KB_FILE = "my_knowledge_base.md"
-DOC_FILE = "cyber_document.md"  # 新增：Word/PPT 核心文本儲存
+DOC_FILE = "cyber_document.md"  # Word/PPT 核心文本儲存
 
+# 初始化檔案：將 DOC_FILE 的預設內容改為完全空白
 for file, default_content in [
     (NOTE_FILE, "隨手記下目前的雜念、任務、待辦..."),
     (KB_FILE, "# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。"),
-    (DOC_FILE, "# 📌 賽博特工專案報告\n---\n## 🚀 第一頁：核心目標\n- 自動化防禦系統部署\n- 雷達聲納全時監控\n---\n## 💻 第二頁：技術架構\n- 前端：Streamlit \n- 底層：Python 3.11 Kernel")
+    (DOC_FILE, "")  # 🟢 初始狀態完全清空，不留任何文字
 ]:
     if not os.path.exists(file):
         with open(file, "w", encoding="utf-8") as f:
@@ -118,7 +119,6 @@ if is_hacker:
         div[data-testid="stNotification"], div[data-testid="stAlert"] { background-color: #000000 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; }
     """
 
-# 額外新增 PPT 投影箱的樣式
 ppt_box_bg = "#051a10" if is_hacker else "#f0f4f8"
 ppt_box_border = "#00ff66" if is_hacker else "#0070f3"
 ppt_text_color = "#00ff66" if is_hacker else "#333333"
@@ -162,8 +162,8 @@ st.components.v1.html("""
 # ==========================================
 # 5. 主畫面排版 (Main UI Layout)
 # ==========================================
-st.title("⚡ 高效率個人工作台 v4.0")
-st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 內建 Word/PPT 雙模文書終端")
+st.title("⚡ 高效率個人工作台 v4.1")
+st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 雙模文書終端 (純淨空白版)")
 
 # 第一層：即時情報 Bento Grid
 col_info1, col_info2 = st.columns([1, 2])
@@ -186,7 +186,7 @@ st.write("")
 col_left, col_right = st.columns([3, 2])
 
 with col_left:
-    # 📝 新增：Word / PPT 賽博編輯器
+    # 📝 Word / PPT 賽博編輯器
     with st.container(border=True):
         st.subheader("📝 賽博文書終端 (Word & PPT 整合模組)")
         
@@ -197,7 +197,7 @@ with col_left:
             
         with doc_tab1:
             st.caption("利用 Markdown 編寫文件，使用 `---` 作為 PPT 的換頁符號。")
-            edited_doc = st.text_area("文件編輯器 (支援豐富文本)", value=doc_content, height=250, key="word_editor")
+            edited_doc = st.text_area("文件編輯器 (支援豐富文本)", value=doc_content, height=250, key="word_editor", placeholder="# 在這裡輸入標題...\n---\n## 新增分頁...")
             
             w_col1, w_col2, w_col3 = st.columns(3)
             with w_col1:
@@ -205,21 +205,19 @@ with col_left:
                     with open(DOC_FILE, "w", encoding="utf-8") as f:
                         f.write(edited_doc)
                     st.toast("文件已成功寫入核心矩陣！", icon="💾")
+                    st.rerun()
             with w_col2:
-                # 匯出標準 Markdown 檔案
                 st.download_button("📥 匯出為 .md 檔案", data=edited_doc, file_name="Cyber_Report.md", mime="text/markdown")
             with w_col3:
-                # 偽 Word 匯出：直接生成含有 doc 格式頭部的純文字流
                 st.download_button("📥 匯出為 Word 格式", data=edited_doc, file_name="Cyber_Report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 
         with doc_tab2:
             # 根據 "---" 分割投影片
-            slides = [s.strip() for s in edited_doc.split("---") if s.strip()]
+            slides = [s.strip() for s in doc_content.split("---") if s.strip()]
             
-            if not slides:
-                st.write("請在編輯器中輸入內容，並用 `---` 進行分頁。")
+            if not slides or doc_content.strip() == "":
+                st.markdown('<div class="ppt-slide-box" style="text-align: center; line-height: 200px; color: #888;">📡 [WAITING FOR MATRIX DATA] 暫無簡報數據，請先在 Word 模式編寫並儲存。</div>', unsafe_allow_html=True)
             else:
-                # 防呆：避免索引溢出
                 if st.session_state.ppt_page >= len(slides):
                     st.session_state.ppt_page = len(slides) - 1
                 
@@ -240,7 +238,7 @@ with col_left:
                         st.session_state.ppt_page += 1
                         st.rerun()
 
-    # ⚡ 閃電收件匣 & 知識庫
+    # ⚡ 閃電收件匣
     @st.fragment
     def render_sticky_notes():
         with st.container(border=True):
@@ -258,7 +256,6 @@ with col_right:
     with st.container(border=True):
         st.subheader("🛰️ 軍用即時聲納雷達監控")
         
-        # 如果番茄鐘啟動，雷達轉速和顏色會進入超載加速模式
         is_hacker_js = "true" if is_hacker else "false"
         pomo_speed_js = "0.04" if st.session_state.pomodoro_active else "0.015"
         
@@ -337,7 +334,7 @@ with col_right:
                 const consoleBox = document.getElementById('simConsole');
                 const logPool = [
                     "[OK] AUTHORIZED VIA GITHUB OAUTH CLIENT...",
-                    "[OK] DOCX_GENERATOR: COMPILING STANDARD RICH TEXT...",
+                    "[OK] RICH_TEXT_ENGINE: INITIALIZED AS EMPTY SLATE...",
                     "[INFO] PPT_ENGINE: PARTITIONING DATA VIA '---' SEGMENTS...",
                     "[ALIVE] POMODORO TIMER LINKED TO RADAR SWEEP SPEED..."
                 ];
@@ -367,4 +364,4 @@ with col_right:
                     st.rerun()
             
             log_time = datetime.now().strftime('%H:%M:%S')
-            st.info(f"[{log_time}] [WORD_PPT_KERNEL] 雙模簡報與文件引擎運作正常。\n[{log_time}] [POMODORO] 脈衝鎖定裝置就緒。")
+            st.info(f"[{log_time}] [WORD_PPT_KERNEL] 雙模純淨文件引擎無文字殘留。\n[{log_time}] [POMODORO] 脈衝鎖定裝置就緒。")
