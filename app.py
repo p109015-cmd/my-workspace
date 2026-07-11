@@ -112,7 +112,7 @@ with st.sidebar:
 radar_data = {"Coding": val_coding, "Focus": val_focus, "Learn": val_learn, "Energy": val_energy, "Delivery": val_delivery}
 
 # ==========================================
-# 3. 全域 CSS 強力黑化 (修正下載按鈕與白底問題)
+# 3. 全域 CSS 強力黑化
 # ==========================================
 hacker_css = ""
 if is_hacker:
@@ -211,7 +211,7 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 【Bug 已修正】：此處將原本錯誤的 .split('') 移除，改用正確的原生 Python list() 函數拆解字串
+    # 採用安全無 split('') 邏輯
     if st.session_state.king_unlocked:
         speed_ms = "12"
         color_theme = "#ff0033"
@@ -229,10 +229,9 @@ if is_hacker and st.session_state.hacker_console_active:
         radar_color = "rgba(0, 235, 212, 0.2)"
         radar_line_color = "#004411"
 
-    # 將字串重新組合給 JS 模組使用，在前端才做原生 JavaScript 的 .split("")，確保安全
     js_raw_string = "".join(char_pool)
 
-    # HTML 密碼雨模組
+    # HTML 密碼雨
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -242,13 +241,10 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        
-        // 在瀏覽器端才執行 split，百分之百不會影響 Python
         const letters = "{js_raw_string}".split(""); 
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
-        
         function draw() {{
             ctx.fillStyle = 'rgba(0, 0, 0, 0.06)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '{color_theme}'; ctx.font = fontSize + 'px monospace';
@@ -265,9 +261,7 @@ if is_hacker and st.session_state.hacker_console_active:
     """
     st.components.v1.html(matrix_rain_html, height=205)
     
-    # 主主控台排版
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
-    
     with h_col1:
         with st.container(border=True):
             st.subheader("📡 特工節點安全通訊")
@@ -331,24 +325,23 @@ if is_hacker and st.session_state.hacker_console_active:
             """
             st.components.v1.html(console_log_html, height=230)
 
-    # 底部指令打字框模組
     st.write("")
     with st.container(border=True):
         cmd_input = st.text_input(
             "⌨️ [SYS-OVERRIDE] 核心指令輸入端 :", 
             key="hacker_cmd_terminal",
-            placeholder="請輸入核心交互指令... (提示: 輸入通行密碼以彈出原版終極控制台)",
+            placeholder="請輸入核心交互指令...",
         )
+        # 為了防止重複輸入時卡住，如果在全螢幕模式下再次輸入密碼，提供手動重整機制
         if cmd_input.strip() == "king1030622":
             st.session_state.king_unlocked = True
-            st.toast("👑 通行密碼驗證通過！原版終極控制台已全域超頻載入！", icon="🔥")
             st.rerun()
         elif cmd_input:
             st.toast(f"執行未授權本地指令: {cmd_input}", icon="📟")
 
 else:
     # ------------------------------------------
-    # 【畫面 B】標準高效工作台 (原本的日常畫面)
+    # 【畫面 B】標準高效工作台
     # ------------------------------------------
     col_info1, col_info2 = st.columns([1, 2])
     with col_info1:
@@ -365,7 +358,6 @@ else:
                     st.markdown(f"{i}. [{news['title']}]({news['link']})")
 
     st.write("") 
-
     col_left, col_right = st.columns([3, 2])
 
     with col_left:
@@ -378,7 +370,7 @@ else:
                 
             with doc_tab1:
                 st.caption("利用 Markdown 編寫文件，使用 `---` 作為 PPT 的換頁符號。")
-                edited_doc = st.text_area("文件編輯器 (支援豐富文本)", value=doc_content, height=250, key="word_editor", placeholder="# 在這裡輸入標題...\n---\n## 新增分頁...")
+                edited_doc = st.text_area("文件編輯器", value=doc_content, height=250, key="word_editor")
                 
                 w_col1, w_col2, w_col3 = st.columns(3)
                 with w_col1:
@@ -395,7 +387,7 @@ else:
             with doc_tab2:
                 slides = [s.strip() for s in doc_content.split("---") if s.strip()]
                 if not slides or doc_content.strip() == "":
-                    st.markdown('<div class="ppt-slide-box" style="text-align: center; line-height: 200px; color: #888;">📡 [WAITING FOR MATRIX DATA] 暫無簡報數據，請先在 Word 模式編寫並儲存。</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="ppt-slide-box" style="text-align: center; line-height: 200px; color: #888;">📡 暫無簡報數據</div>', unsafe_allow_html=True)
                 else:
                     if st.session_state.ppt_page >= len(slides):
                         st.session_state.ppt_page = len(slides) - 1
@@ -442,17 +434,8 @@ else:
                 const ctx = canvas.getContext('2d');
                 const isHacker = {is_hacker_js};
                 const sweepSpeed = {pomo_speed_js};
-                
-                const colors = isHacker ? {{
-                    bg: '#03120E', grid: '#004411', line: '#00ebd4', sweep: 'rgba(0, 235, 212, 0.15)', target: '#00ffcc'
-                }} : {{
-                    bg: '#f7f9fa', grid: '#d1dbe0', line: '#0070f3', sweep: 'rgba(0, 112, 243, 0.08)', target: '#0051a8'
-                }};
-                
-                let angle = 0;
-                const cx = canvas.width / 2; const cy = canvas.height / 2;
-                const maxRadius = 130;
-                
+                const colors = isHacker ? {{ bg: '#03120E', grid: '#004411', line: '#00ebd4', sweep: 'rgba(0, 235, 212, 0.15)', target: '#00ffcc' }} : {{ bg: '#f7f9fa', grid: '#d1dbe0', line: '#0070f3', sweep: 'rgba(0, 112, 243, 0.08)', target: '#0051a8' }};
+                let angle = 0; const cx = canvas.width / 2; const cy = canvas.height / 2; const maxRadius = 130;
                 const targets = [
                     {{ name: 'Coding', val: {radar_data['Coding']}, angle: -Math.PI/2 }},
                     {{ name: 'Focus', val: {radar_data['Focus']}, angle: -Math.PI/2 + (Math.PI*2/5) }},
@@ -460,34 +443,16 @@ else:
                     {{ name: 'Energy', val: {radar_data['Energy']}, angle: -Math.PI/2 + (Math.PI*2/5)*3 }},
                     {{ name: 'Delivery', val: {radar_data['Delivery']}, angle: -Math.PI/2 + (Math.PI*2/5)*4 }}
                 ];
-                
                 function draw() {{
                     ctx.fillStyle = colors.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
-                    for(let r = 30; r <= maxRadius; r += 30) {{
-                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-                    }}
-                    ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy);
-                    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); ctx.stroke();
-                    
-                    ctx.beginPath();
-                    targets.forEach((t, i) => {{
-                        let r = (t.val / 100) * maxRadius;
-                        let x = cx + r * Math.cos(t.angle); let y = cy + r * Math.sin(t.angle);
-                        if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                    }});
-                    ctx.closePath();
-                    ctx.strokeStyle = isHacker ? 'rgba(0,255,102,0.6)' : 'rgba(255,75,75,0.6)';
-                    ctx.stroke();
-
-                    ctx.fillStyle = colors.sweep; ctx.beginPath(); ctx.moveTo(cx, cy);
-                    ctx.arc(cx, cy, maxRadius, angle, angle + 0.4); ctx.closePath(); ctx.fill();
-                    
-                    ctx.strokeStyle = colors.line; ctx.beginPath(); ctx.moveTo(cx, cy);
-                    ctx.lineTo(cx + maxRadius * Math.cos(angle + 0.4), cy + maxRadius * Math.sin(angle + 0.4)); ctx.stroke();
-
-                    angle += sweepSpeed;
-                    requestAnimationFrame(draw);
+                    for(let r = 30; r <= maxRadius; r += 30) {{ ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }}
+                    ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy); ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); ctx.stroke();
+                    ctx.beginPath(); targets.forEach((t, i) => {{ let r = (t.val / 100) * maxRadius; let x = cx + r * Math.cos(t.angle); let y = cy + r * Math.sin(t.angle); if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }}); ctx.closePath();
+                    ctx.strokeStyle = isHacker ? 'rgba(0,255,102,0.6)' : 'rgba(255,75,75,0.6)'; ctx.stroke();
+                    ctx.fillStyle = colors.sweep; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxRadius, angle, angle + 0.4); ctx.closePath(); ctx.fill();
+                    ctx.strokeStyle = colors.line; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + maxRadius * Math.cos(angle + 0.4), cy + maxRadius * Math.sin(angle + 0.4)); ctx.stroke();
+                    angle += sweepSpeed; requestAnimationFrame(draw);
                 }}
                 draw();
             }})();
@@ -497,31 +462,23 @@ else:
 
         if is_hacker:
             with st.container(border=True):
-                if st.session_state.hacker_simulator_unlocked:
-                    st.subheader("🚨 極客黑客終極模擬器 (Matrix Core)")
-                    hacker_simulator_html = """
-                    <div id="simConsole" style="background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:10px; height:130px; overflow:hidden; border:1px solid #0f0; border-radius:5px;"></div>
-                    <script>
-                    (function(){
-                        const consoleBox = document.getElementById('simConsole');
-                        const logPool = [
-                            "[OK] AUTHORIZED VIA GITHUB OAUTH CLIENT...",
-                            "[OK] RICH_TEXT_ENGINE: SECURITY LAYER ACTIVE...",
-                            "[ALIVE] POMODORO TIMER LINKED TO RADAR SWEEP SPEED..."
-                        ];
-                        function appendLog() {
-                            let randomLine = logPool[Math.floor(Math.random() * logPool.length)];
-                            let p = document.createElement('div'); p.innerText = "[" + new Date().toLocaleTimeString() + "] " + randomLine;
-                            consoleBox.appendChild(p);
-                            if(consoleBox.childNodes.length > 6) consoleBox.removeChild(consoleBox.firstChild);
-                            consoleBox.scrollTop = consoleBox.scrollHeight;
-                        }
-                        setInterval(appendLog, 250);
-                    })();
-                    </script>
-                    """
-                    st.components.v1.html(hacker_simulator_html, height=150)
+                # 【新增雙保險邏輯】：建立手動解鎖覆寫按鈕
+                st.subheader("📟 系統事件日誌流 (Execute)")
+                
+                # 安全密碼監聽器
+                cmd_box = st.text_input("🔑 輸入終極通行密碼以解鎖隱藏控制台：", key="main_hacker_gate", type="password", placeholder="請在此輸入 king1030622 ...")
+                
+                if cmd_box.strip() == "king1030622":
+                    st.session_state.king_unlocked = True
+                    st.session_state.hacker_console_active = True
                     
+                    # 雙保險按鈕：點擊即可 100% 強制重整切換畫面
+                    if st.button("👑 密碼正確！點擊此處立即強制解鎖原版終極控制台", type="primary"):
+                        st.rerun()
+                
+                st.markdown("---")
+                if st.session_state.hacker_simulator_unlocked:
+                    st.write("🟢 模擬器安全隔離層：已開啟")
                     b_col1, b_col2 = st.columns(2)
                     with b_col1:
                         if st.button("🔒 重新鎖定模擬器"):
@@ -532,10 +489,6 @@ else:
                             st.session_state.hacker_console_active = True
                             st.rerun()
                 else:
-                    st.subheader("📟 系統事件日誌流 (Execute)")
-                    log_time = datetime.now().strftime('%H:%M:%S')
-                    st.info(f"[{log_time}] [KERNEL] 密鑰鎖定中。駭客專屬控制台按鈕已就緒。\n[{log_time}] [SECURITY] 隔離區未偵測到威脅。")
-                    
                     btn_col1, btn_col2 = st.columns(2)
                     with btn_col1:
                         if st.button("🔓 解鎖特工模擬器"):
