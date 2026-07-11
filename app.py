@@ -1,87 +1,269 @@
 import streamlit as st
+import requests
+import feedparser
+import os
+import plotly.express as px
 import plotly.graph_objects as go
+from datetime import datetime
 
-# --- 1. 網頁基本設定 (必須是第一個 Streamlit 指令) ---
+# ==========================================
+# 1. 頁面核心配置
+# ==========================================
 st.set_page_config(
-    page_title="高效個人工作台",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide", 
+    page_title="多維度個人工作台", 
+    page_icon="🧠"
 )
 
-# --- 2. 側邊欄導覽 ---
-with st.sidebar:
-    st.title("⚡ 導覽選單")
-    st.markdown("---")
-    page = st.radio(
-        "切換功能模組",
-        ["📊 狀態儀表板", "📝 任務管理", "🎯 目標追蹤", "⚙️ 系統設定"]
-    )
-    st.markdown("---")
-    st.caption("高效個人工作台 v2.0 • 2026")
+# ==========================================
+# 2. 鍵盤 F1 監聽器 (JavaScript 注入)
+# ==========================================
+# 透過隱藏的 HTML 元件監聽全網頁的鍵盤事件，按下 F1 時會自動觸發 Streamlit 的 Radio 切換
+st.components.v1.html("""
+<script>
+    const doc = window.parent.document;
+    doc.addEventListener('keydown', function(e) {
+        if (e.key === 'F1') {
+            e.preventDefault(); // 阻擋瀏覽器預設的說明視窗
+            
+            // 尋找網頁中的 Radio 選項並模擬點擊切換
+            const radios = doc.querySelectorAll('input[type="radio"]');
+            if (radios.length >= 2) {
+                if (radios[0].checked) {
+                    radios[1].click();
+                } else {
+                    radios[0].click();
+                }
+            }
+        }
+    });
+</script>
+""", height=0, width=0)
 
-# --- 3. 主畫面內容 ---
-if page == "📊 狀態儀表板":
-    st.title("📊 個人狀態儀表板")
-    st.subheader("今日核心能力雷達指標")
-    
-    # 填入你的能力數值（可自行調整 0 ~ 100）
-    # 順序：專案執行力, 程式開發, 資訊吸收, 身心健康, 時間管理
-    # 註：最後一個數字必須與第一個相同 (80)，圖形才會閉合
+# ==========================================
+# 3. 雙模式 CSS 注入 (動態切換)
+# ==========================================
+if "workspace_mode" not in st.session_state:
+    st.session_state.workspace_mode = "正常模式 📊"
+
+HACKER_CSS = """
+<style>
+    /* 全域暗色調與綠字 */
+    .stApp {
+        background-color: #0d0d0d !important;
+        color: #00FF00 !important;
+    }
+    h1, h2, h3, h4, h5, h6, p, span, label {
+        color: #00FF00 !important;
+        font-family: 'Courier New', Courier, monospace !important;
+    }
+    /* 駭客控制台日誌樣式 */
+    .hacker-box {
+        font-family: 'Courier New', Courier, monospace !important;
+        color: #00FF00 !important;
+        background-color: #000000 !important;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+        border-left: 3px solid #00AA00;
+        border: 1px solid #00FF00;
+        box-shadow: 0 0 5px #00FF00;
+    }
+</style>
+"""
+
+if st.session_state.workspace_mode == "駭客模式 ⚡":
+    st.markdown(HACKER_CSS, unsafe_allow_html=True)
+
+# ==========================================
+# 4. 資料與狀態初始化
+# ==========================================
+STICKY_FILE = "sticky_notes.txt"
+
+if not os.path.exists(STICKY_FILE):
+    with open(STICKY_FILE, "w", encoding="utf-8") as f:
+        f.write("💡 系統就緒。\n📌 在此紀錄今日臨時便利貼，關閉網頁亦可留存。")
+
+if "sticky_notes" not in st.session_state:
+    with open(STICKY_FILE, "r", encoding="utf-8") as f:
+        st.session_state.sticky_notes = f.read()
+
+if "hacker_logs" not in st.session_state:
+    st.session_state.hacker_logs = [
+        f"[{datetime.now().strftime('%H:%M:%S')}] GRID_INIT // Matrix mode operational.",
+        f"[{datetime.now().strftime('%H:%M:%S')}] SECURITY // Local node backup verified."
+    ]
+
+def add_log(action, level="INFO"):
+    t = datetime.now().strftime('%H:%M:%S')
+    st.session_state.hacker_logs.insert(0, f"[{t}] {level} // {action}")
+    if len(st.session_state.hacker_logs) > 10:
+        st.session_state.hacker_logs.pop()
+
+# ==========================================
+# 5. 數據抓取與雷達圖繪製
+# ==========================================
+def get_weather():
+    try:
+        response = requests.get("https://wttr.in/Yunlin?format=j1", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            current = data['current_condition'][0]
+            return {
+                "temp": f"{current['temp_C']} °C", 
+                "delta": f"體感 {current['FeelsLikeC']} °C", 
+                "desc": current['lang_zh'][0]['value'] if 'lang_zh' in current else current['weatherDesc'][0]['value'], 
+                "humidity": f"{current['humidity']}%"
+            }
+    except Exception:
+        pass
+    return {"temp": "無法取得", "delta": "--", "desc": "未知", "humidity": "--"}
+
+def get_news():
+    try:
+        rss_url = "https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
+        feed = feedparser.parse(rss_url)
+        return [{"title": entry.title, "link": entry.link} for entry in feed.entries[:5]]
+    except Exception:
+        return [{"title": "新聞加載失敗。", "link": "#"}]
+
+def draw_radar_chart():
+    """繪製雷達圖 - 自動變換正常/駭客暗黑底色"""
     categories = ['專案執行力', '程式開發', '資訊吸收', '身心健康', '時間管理']
-    values = [80, 85, 70, 75, 65, 80] 
-    categories_closed = categories + [categories[0]]
+    values = [85, 90, 75, 80, 70]
+    
+    is_hacker = st.session_state.workspace_mode == "駭客模式 ⚡"
+    
+    line_color = '#00FF00' if is_hacker else '#FF4B4B'
+    fill_color = 'rgba(0, 255, 0, 0.25)' if is_hacker else 'rgba(255, 75, 75, 0.15)'
+    bg_color = '#0d0d0d' if is_hacker else 'rgba(0,0,0,0)'
+    text_color = '#00FF00' if is_hacker else '#31333F'
+    grid_color = '#115511' if is_hacker else '#E5E5E5'
 
-    # 建立 Plotly 雷達圖
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories_closed,
-        fill='toself',
-        fillcolor='rgba(99, 102, 241, 0.25)',  # 半透明螢光藍紫
-        line=dict(color='rgba(129, 140, 248, 1)', width=2.5), # 亮螢光藍線條
-        marker=dict(color='rgba(129, 140, 248, 1)', size=7),
-        name='目前狀態'
-    ))
-
-    # 極致暗黑風格設定
+    fig = px.line_polar(
+        r=values + [values[0]],
+        theta=categories + [categories[0]],
+        line_close=True
+    )
+    
+    fig.update_traces(fill='toself', fillcolor=fill_color, line_color=line_color)
     fig.update_layout(
         polar=dict(
-            bgcolor='rgba(16, 22, 35, 1)',  # 深色背景
-            angularaxis=dict(
-                tickfont=dict(size=14, color='#F3F4F6', family="Microsoft JhengHei"), # 文字標籤改白
-                linewidth=1,
-                linecolor='rgba(255, 255, 255, 0.15)'
-            ),
+            bgcolor=bg_color,
             radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                tickfont=dict(color='rgba(255, 255, 255, 0.4)'), # 數字刻度半透明
-                gridcolor='rgba(255, 255, 255, 0.08)',          # 網格線
-                linecolor='rgba(255, 255, 255, 0.15)',
+                visible=True, 
+                range=[0, 100], 
+                gridcolor=grid_color,
+                angle=0,
+                tickfont=dict(color=text_color, family='Courier New' if is_hacker else 'sans-serif')
+            ),
+            angularaxis=dict(
+                gridcolor=grid_color, 
+                tickfont=dict(color=text_color, size=12, family='Courier New' if is_hacker else 'sans-serif')
             )
         ),
-        paper_bgcolor='rgba(16, 22, 35, 1)',  # 畫布外圍背景
         showlegend=False,
-        width=550,
-        height=550,
-        margin=dict(l=50, r=50, t=50, b=50)
+        paper_bgcolor=bg_color,
+        plot_bgcolor=bg_color,
+        height=320,
+        margin=dict(l=40, r=40, t=20, b=20)
     )
+    return fig
 
-    # 在網頁上置中呈現雷達圖
-    col1, col2, col3 = st.columns([1, 2, 1])
+# ==========================================
+# 6. 🎛️ 側邊欄控制中心
+# ==========================================
+with st.sidebar:
+    st.subheader("⚙️ 工作台控制中心")
+    st.caption("💡 提示：在網頁任何地方按下鍵盤 [F1] 即可秒切模式！")
+    
+    selected_mode = st.radio(
+        "切換工作台人格：",
+        ["正常模式 📊", "駭客模式 ⚡"],
+        index=0 if st.session_state.workspace_mode == "正常模式 📊" else 1
+    )
+    
+    if selected_mode != st.session_state.workspace_mode:
+        st.session_state.workspace_mode = selected_mode
+        st.rerun()
+
+    st.markdown("---")
+    st.markdown("📈 **目前個人能力狀態矩陣**")
+    st.plotly_chart(draw_radar_chart(), use_container_width=True)
+    
+    if st.session_state.workspace_mode == "駭客模式 ⚡":
+        st.markdown("---")
+        st.markdown("💻 **MATRIX LOG STREAM**")
+        for log in st.session_state.hacker_logs:
+            st.markdown(f'<div class="hacker-box">{log}</div>', unsafe_allow_html=True)
+        if st.button("🧹 PURGE LOGS", use_container_width=True):
+            st.session_state.hacker_logs = [f"[{datetime.now().strftime('%H:%M:%S')}] LOGS PURGED."]
+            st.rerun()
+
+# ==========================================
+# 7. 主網頁排版渲染 (st.fragment 保持流暢)
+# ==========================================
+st.title("💼 我的高效個人工作台")
+st.caption(f"📅 當前時間緯度：{datetime.now().strftime('%Y-%m-%d')} | 當前模式：{st.session_state.workspace_mode}")
+st.markdown("---")
+
+# 【上半部：情報站（天氣/新聞）】
+@st.fragment
+def render_info_station():
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        with st.container(border=True):
+            st.subheader("🌡️ ☀️ 即時天氣情報")
+            weather = get_weather()
+            st.metric(label=f"雲林古坑 ({weather['desc']})", value=weather['temp'], delta=weather['delta'])
+            st.caption(f"💧 環境濕度：{weather['humidity']}")
+            if st.button("🔄 刷新天氣", use_container_width=True):
+                add_log("Synced geolocation environmental matrix.", "WEATHER")
+                st.toast("天氣已更新")
+                st.rerun()
+
     with col2:
-        st.plotly_chart(fig, use_container_width=True)
+        with st.container(border=True):
+            st.subheader("🌐 📰 今日焦點新聞")
+            news_items = get_news()
+            for item in news_items:
+                st.markdown(f"• [{item['title']}]({item['link']})")
+            if st.button("🔄 刷新新聞", use_container_width=True):
+                add_log("Intercepted public RSS data feed.", "NETWORK")
+                st.toast("新聞已更新")
+                st.rerun()
 
-elif page == "📝 任務管理":
-    st.title("📝 任務管理系統")
-    st.info("這裡可以串接你的待辦事項清單或 Notion 數據庫。")
+# 【下半部：核心工作區（便利貼/筆記）】
+@st.fragment
+def render_notes_system():
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        with st.container(border=True):
+            st.subheader("📝 📌 隨身便利貼")
+            updated_sticky = st.text_area("貼紙內容", value=st.session_state.sticky_notes, height=180, label_visibility="collapsed")
+            st.session_state.sticky_notes = updated_sticky
+            if st.button("💾 儲存便利貼", type="primary", use_container_width=True):
+                with open(STICKY_FILE, "w", encoding="utf-8") as f_out:
+                    f_out.write(updated_sticky)
+                add_log(f"Sector write successful to {STICKY_FILE}", "SECURITY")
+                st.toast("便利貼已儲存！")
+                st.rerun()
 
-elif page == "🎯 目標追蹤":
-    st.title("🎯 核心目標追蹤")
-    st.info("追蹤季目標（OKR）或長期專案進度。")
+    with col2:
+        with st.container(border=True):
+            st.subheader("✍️ 📓 知識深度筆記")
+            note_title = st.text_input("筆記標題", value=f"{datetime.now().strftime('%Y-%m-%d')} 工作日誌")
+            long_note = st.text_area("內文 (支援 Markdown)", height=115, placeholder="在此輸入結構化思維...")
+            if st.button("🚀 一鍵歸檔至本地知識庫 (.md)", use_container_width=True):
+                if long_note.strip() != "":
+                    with open("my_knowledge_base.md", "a", encoding="utf-8") as f_out:
+                        f_out.write(f"\n\n## {note_title}\n* 📅 時間：{datetime.now().strftime('%H:%M:%S')}\n\n{long_note}")
+                    add_log("Compiled Markdown segment into database matrix.", "KNOWLEDGE")
+                    st.success("筆記已歸檔！")
+                    st.rerun()
 
-elif page == "⚙️ 系統設定":
-    st.title("⚙️ 工作台設定")
-    st.success("工作台正常運行中，已成功套用 Plotly 暗黑雷達圖組件。")
+# 呼叫渲染
+render_info_station()
+st.markdown("<br>", unsafe_allow_html=True)
+render_notes_system()
