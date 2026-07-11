@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v5.7",
+    page_title="Cyber Hacker Workstation v5.8",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -112,7 +112,7 @@ with st.sidebar:
 radar_data = {"Coding": val_coding, "Focus": val_focus, "Learn": val_learn, "Energy": val_energy, "Delivery": val_delivery}
 
 # ==========================================
-# 3. 全域 CSS 強力黑化 (含下載按鈕樣式修復)
+# 3. 全域 CSS 強力黑化 (修正下載按鈕與白底問題)
 # ==========================================
 hacker_css = ""
 if is_hacker:
@@ -127,7 +127,6 @@ if is_hacker:
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         a { color: #88ccff !important; }
         
-        /* 強制將所有按鈕、下載按鈕及其內部的 p 標籤與外部包裝全部黑化 */
         div[data-testid="stButton"] button, div[data-testid="stDownloadButton"] button, div[data-testid="stDownloadButton"] a { 
             background-color: #000000 !important; 
             color: #00ff66 !important; 
@@ -200,7 +199,6 @@ if is_hacker and st.session_state.hacker_console_active:
     else:
         st.title("📟 終極矩陣核心控制台 (OVERRIDE ACTIVE)")
     
-    # 頂部返回與狀態按鈕
     c_top1, c_top2 = st.columns([3, 1])
     with c_top1:
         if st.button("↩️ 關閉控制台並返回工作台"):
@@ -213,16 +211,25 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 密碼雨參數動態判定
-    speed_ms = "12" if st.session_state.king_unlocked else "35"
-    color_theme = "#ff0033" if st.session_state.king_unlocked else "#00ff66"
-    
-    # 避開 Python f-string 剖析錯誤的 JS 核心代碼
+    # 建立純淨的變數，徹底在 Python 端隔離與分流，避免 JS 在 f-string 出現大括號或單引號混淆
     if st.session_state.king_unlocked:
-        js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑🔱'.split('')"
+        speed_ms = "12"
+        color_theme = "#ff0033"
+        js_raw_string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑🔱"
+        js_logs_array = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[OVERCLOCK] SYSTEM HEATING UP TO 94C...']"
+        radar_speed = "0.25"
+        radar_color = "rgba(255, 0, 50, 0.3)"
+        radar_line_color = "#ff0033"
     else:
-        js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙'.split('')"
-    
+        speed_ms = "35"
+        color_theme = "#00ff66"
+        js_raw_string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙"
+        js_logs_array = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
+        radar_speed = "0.08"
+        radar_color = "rgba(0, 235, 212, 0.2)"
+        radar_line_color = "#004411"
+
+    # HTML 密碼雨模組 (進行雙重大括號轉義)
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -232,7 +239,7 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        const letters = {js_char_pool};
+        const letters = "{js_raw_string}".split("");
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
@@ -253,7 +260,7 @@ if is_hacker and st.session_state.hacker_console_active:
     """
     st.components.v1.html(matrix_rain_html, height=205)
     
-    # 主主控台排版 (三直欄數據監控)
+    # 主主控台排版 (三柱狀數據監控)
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     
     with h_col1:
@@ -271,10 +278,6 @@ if is_hacker and st.session_state.hacker_console_active:
     with h_col2:
         with st.container(border=True):
             st.subheader("🛰️ 雷達追蹤 (極速脈衝模式)")
-            radar_speed = "0.25" if st.session_state.king_unlocked else "0.08"
-            radar_color = "rgba(255, 0, 50, 0.3)" if st.session_state.king_unlocked else "rgba(0, 235, 212, 0.2)"
-            radar_line_color = "#ff0033" if st.session_state.king_unlocked else "#004411"
-            
             radar_html_fs = f"""
             <div style="text-align: center; background: #03120E; padding: 5px; border-radius: 8px;">
                 <canvas id="radarFS" width="300" height="230"></canvas>
@@ -305,26 +308,19 @@ if is_hacker and st.session_state.hacker_console_active:
     with h_col3:
         with st.container(border=True):
             st.subheader("☣️ 系統後台事件解密流")
-            log_interval = "120" if st.session_state.king_unlocked else "400"
-            
-            if st.session_state.king_unlocked:
-                js_active_pool = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[OVERCLOCK] SYSTEM HEATING UP TO 94C...']"
-            else:
-                js_active_pool = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
-                
             console_log_html = f"""
             <div id="fullConsole" style="background:#000; color:{color_theme}; font-family:monospace; font-size:11px; padding:10px; height:210px; overflow:hidden;"></div>
             <script>
             (function(){{
                 const box = document.getElementById('fullConsole');
-                const activePool = {js_active_pool};
+                const activePool = {js_logs_array};
                 setInterval(() => {{
                     let div = document.createElement('div');
                     div.innerText = "[" + new Date().toLocaleTimeString() + "] " + activePool[Math.floor(Math.random()*activePool.length)];
                     box.appendChild(div);
                     if(box.childNodes.length > 12) box.removeChild(box.firstChild);
                     box.scrollTop = box.scrollHeight;
-                }}, {log_interval});
+                }}, 300);
             }})();
             </script>
             """
@@ -338,7 +334,6 @@ if is_hacker and st.session_state.hacker_console_active:
             key="hacker_cmd_terminal",
             placeholder="請輸入核心交互指令... (提示: 輸入通行密碼以彈出原版終極控制台)",
         )
-        # 只要偵測到密碼，立刻執行全域覆寫，防止被 Rerun 蓋過
         if cmd_input.strip() == "king1030622":
             st.session_state.king_unlocked = True
             st.toast("👑 通行密碼驗證通過！原版終極控制台已全域超頻載入！", icon="🔥")
@@ -350,7 +345,6 @@ else:
     # ------------------------------------------
     # 【畫面 B】標準高效工作台 (原本的日常畫面)
     # ------------------------------------------
-    
     col_info1, col_info2 = st.columns([1, 2])
     with col_info1:
         with st.container(border=True):
@@ -370,10 +364,8 @@ else:
     col_left, col_right = st.columns([3, 2])
 
     with col_left:
-        # 📝 Word / PPT 賽博編輯器
         with st.container(border=True):
             st.subheader("📝 賽博文書終端 (Word & PPT 整合模組)")
-            
             doc_tab1, doc_tab2 = st.tabs(["📄 Word 編輯模式", "📺 PPT 簡報播放模式"])
             
             with open(DOC_FILE, "r", encoding="utf-8") as f:
@@ -397,13 +389,11 @@ else:
                     
             with doc_tab2:
                 slides = [s.strip() for s in doc_content.split("---") if s.strip()]
-                
                 if not slides or doc_content.strip() == "":
                     st.markdown('<div class="ppt-slide-box" style="text-align: center; line-height: 200px; color: #888;">📡 [WAITING FOR MATRIX DATA] 暫無簡報數據，請先在 Word 模式編寫並儲存。</div>', unsafe_allow_html=True)
                 else:
                     if st.session_state.ppt_page >= len(slides):
                         st.session_state.ppt_page = len(slides) - 1
-                    
                     current_slide_content = slides[st.session_state.ppt_page]
                     st.markdown(f'<div class="ppt-slide-box">{current_slide_content}</div>', unsafe_allow_html=True)
                     
@@ -419,7 +409,6 @@ else:
                             st.session_state.ppt_page += 1
                             st.rerun()
 
-        # ⚡ 閃電收件匣
         @st.fragment
         def render_sticky_notes():
             with st.container(border=True):
@@ -433,10 +422,8 @@ else:
         render_sticky_notes()
 
     with col_right:
-        # 1. 軍用動態聲納雷達
         with st.container(border=True):
             st.subheader("🛰️ 軍用即時聲納雷達監控")
-            
             is_hacker_js = "true" if is_hacker else "false"
             pomo_speed_js = "0.04" if st.session_state.pomodoro_active else "0.015"
             
@@ -476,7 +463,7 @@ else:
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
                     }}
                     ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy);
-                    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); stroke();
+                    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); ctx.stroke();
                     
                     ctx.beginPath();
                     targets.forEach((t, i) => {{
@@ -503,9 +490,6 @@ else:
             """
             st.components.v1.html(radar_html, height=340)
 
-        # ==========================================
-        # 🔒 【日誌區塊 + 駭客按鈕】只限駭客模式可見
-        # ==========================================
         if is_hacker:
             with st.container(border=True):
                 if st.session_state.hacker_simulator_unlocked:
@@ -542,10 +526,8 @@ else:
                         if st.button("⚡ 進入全域控制台", key="launch_panel_unlocked"):
                             st.session_state.hacker_console_active = True
                             st.rerun()
-
                 else:
                     st.subheader("📟 系統事件日誌流 (Execute)")
-                    
                     log_time = datetime.now().strftime('%H:%M:%S')
                     st.info(f"[{log_time}] [KERNEL] 密鑰鎖定中。駭客專屬控制台按鈕已就緒。\n[{log_time}] [SECURITY] 隔離區未偵測到威脅。")
                     
