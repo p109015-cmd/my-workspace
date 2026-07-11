@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v7.5",
+    page_title="Cyber Hacker Workstation v8.0",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -84,7 +84,7 @@ with st.sidebar:
     )
     is_hacker = "Hacker" in ui_mode
 
-    # 如果離開駭客模式，關閉所有隱藏面板與解鎖狀態
+    # 如果非駭客模式，強制重設狀態
     if not is_hacker:
         st.session_state.hacker_console_active = False
         st.session_state.king_unlocked = False
@@ -163,7 +163,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# F1 快捷鍵相容層
+# F1 快捷鍵
 st.components.v1.html("""
     <script>
     const handleF1 = (e) => {
@@ -183,7 +183,7 @@ st.components.v1.html("""
 
 
 # ========================================================================
-# 🚨 關鍵分流邏輯：若解鎖控制台，直接進入【畫面 A】全螢幕終極矩陣核心控制台
+# 🚨 畫面分流：全螢幕終極控制台 (畫面 A)
 # ========================================================================
 if is_hacker and st.session_state.hacker_console_active:
     
@@ -204,23 +204,22 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 決定控制台的主題色彩與動態速率（不使用 Python 的 split 處理字串，徹底避開 ValueError）
     if st.session_state.king_unlocked:
         speed_ms = "12"
-        color_theme = "#ff0033"  # 解鎖超頻後全螢幕代碼雨變為紅色！
+        color_theme = "#ff0033"
         js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         radar_speed = "0.22"
         radar_color = "rgba(255, 0, 50, 0.25)"
         radar_line_color = "#ff0033"
     else:
         speed_ms = "35"
-        color_theme = "#00ff66"  # 正常控制台為原版經典綠色
+        color_theme = "#00ff66"
         js_char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         radar_speed = "0.06"
         radar_color = "rgba(0, 235, 212, 0.15)"
         radar_line_color = "#004411"
 
-    # 全螢幕 Canvas 頂部動態矩陣代碼雨
+    # 全螢幕代碼雨 (所有內部大括號全數雙重轉義 {{ }} 完畢)
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -240,7 +239,7 @@ if is_hacker and st.session_state.hacker_console_active:
             for(let i=0; i<drops.length; i++) {{
                 const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i*fontSize, drops[i]*fontSize);
-                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) {{ drops[i] = 0; }}
                 drops[i]++;
             }}
         }}
@@ -250,7 +249,6 @@ if is_hacker and st.session_state.hacker_console_active:
     """
     st.components.v1.html(matrix_rain_html, height=205)
     
-    # 控制台三大主要功能模組區塊
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     with h_col1:
         with st.container(border=True):
@@ -295,7 +293,6 @@ if is_hacker and st.session_state.hacker_console_active:
             st.components.v1.html(radar_html_fs, height=250)
 
     with h_col3:
-        # 重現圖中完整的：[ GHOST-NETWORK ] 戰略後門操控模組
         with st.container(border=True):
             st.subheader("💀 [GHOST-NETWORK]")
             st.markdown(f"""
@@ -319,23 +316,20 @@ if is_hacker and st.session_state.hacker_console_active:
 
     st.write("")
     with st.container(border=True):
-        # 底部核心指令輸入端
         cmd_input = st.text_input(
             "⌨️ [SYS-OVERRIDE] 核心指令輸入端 :", 
             key="hacker_cmd_terminal",
             type="password",
             placeholder="請輸入核心交互密鑰（輸入 king1030622 可啟用終極皇權紅化超頻模式）...",
         )
-        if cmd_input.strip() == "king1030622":
+        if cmd_input.strip() == "king1030622" and not st.session_state.king_unlocked:
             st.session_state.king_unlocked = True
             st.toast("👑 終極皇權模式已啟用！矩陣系統開始全域超頻！", icon="👑")
             st.rerun()
-        elif cmd_input:
-            st.toast(f"執行指令: {cmd_input}", icon="📟")
 
 else:
     # ========================================================================
-    # 【畫面 B】標準高效主工作台面（未切換至控制台前的畫面）
+    # 💻 標準主工作台面 (畫面 B)
     # ========================================================================
     col_info1, col_info2 = st.columns([1, 2])
     with col_info1:
@@ -418,6 +412,7 @@ else:
             is_hacker_js = "true" if is_hacker else "false"
             pomo_speed_js = "0.04" if st.session_state.pomodoro_active else "0.015"
             
+            # 【關鍵修復】將所有 JavaScript 的大括號內部邏輯使用雙重大括號 {{ }} 進行轉義，防止 Streamlit KeyError 崩潰
             radar_html = f"""
             <div style="text-align: center; background: { '#03120E' if is_hacker else '#f7f9fa' }; padding: 10px; border-radius: 8px;">
                 <canvas id="militaryRadar" width="360" height="320"></canvas>
@@ -440,9 +435,18 @@ else:
                 function draw() {{
                     ctx.fillStyle = colors.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
-                    for(let r = 30; r <= maxRadius; r += 30) {{ ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }}
-                    ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy); ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); stroke();
-                    ctx.beginPath(); targets.forEach((t, i) => {{ let r = (t.val / 100) * maxRadius; let x = cx + r * Math.cos(t.angle); let y = cy + r * Math.sin(t.angle); if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }}); ctx.closePath();
+                    for(let r = 30; r <= maxRadius; r += 30) {{ 
+                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); 
+                    }}
+                    ctx.beginPath(); ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy); ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius); ctx.stroke();
+                    ctx.beginPath(); 
+                    targets.forEach((t, i) => {{ 
+                        let r = (t.val / 100) * maxRadius; 
+                        let x = cx + r * Math.cos(t.angle); 
+                        let y = cy + r * Math.sin(t.angle); 
+                        if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); 
+                    }}); 
+                    ctx.closePath();
                     ctx.strokeStyle = isHacker ? 'rgba(0,255,102,0.6)' : 'rgba(255,75,75,0.6)'; ctx.stroke();
                     ctx.fillStyle = colors.sweep; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxRadius, angle, angle + 0.4); ctx.closePath(); ctx.fill();
                     ctx.strokeStyle = colors.line; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + maxRadius * Math.cos(angle + 0.4), cy + maxRadius * Math.sin(angle + 0.4)); ctx.stroke();
@@ -454,15 +458,14 @@ else:
             """
             st.components.v1.html(radar_html, height=340)
 
-        # 工作台底部的密碼輸入與通行閘門
+        # 系統日誌流通行閘門
         if is_hacker:
             with st.container(border=True):
                 st.subheader("📟 系統事件日誌流 (Execute)")
                 
-                # 在這裡輸入密碼 king1030622
                 cmd_box = st.text_input("🔑 輸入終極通行密碼解鎖全螢幕隱藏控制台：", key="main_hacker_gate", type="password", placeholder="請在此輸入通行密鑰...")
                 
-                if cmd_box.strip() == "king1030622":
+                if cmd_box.strip() == "king1030622" and not st.session_state.hacker_console_active:
                     st.session_state.king_unlocked = True
                     st.session_state.hacker_console_active = True
                     st.success("👑 驗證通過！全域矩陣核心強制覆寫跳轉中...")
