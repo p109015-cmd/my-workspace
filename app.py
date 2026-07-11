@@ -11,7 +11,7 @@ from datetime import datetime
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Military Hacker Station v3.5",
+    page_title="Military Hacker Station v3.6",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -29,19 +29,19 @@ if not os.path.exists(KB_FILE):
         f.write("# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。")
 
 # ==========================================
-# 1. GitHub 概念密碼驗證核心邏輯 (解決解鎖沒反應問題)
+# 1. 核心解鎖邏輯 (解決解鎖沒反應問題)
 # ==========================================
-# 初始化密碼解鎖狀態
 if "hacker_simulator_unlocked" not in st.session_state:
     st.session_state.hacker_simulator_unlocked = False
 
-# 當檢測到 URL 參數或狀態中有解鎖信號時立即處理
+# 檢查 URL 參數是否有解鎖權杖
 query_params = st.query_params
-if "github_token_auth" in query_params and query_params["github_token_auth"] == "1030622":
-    st.session_state.hacker_simulator_unlocked = True
-    # 清除網址後綴避免重複觸發
+if "github_token_auth" in query_params:
+    if query_params["github_token_auth"] == "1030622":
+        st.session_state.hacker_simulator_unlocked = True
+        st.toast("🚨 [GITHUB AUTH SUCCESS] 終極駭客模擬器已成功解鎖！", icon="🚨")
+    # 處理完畢後清空 URL 參數，避免重整時重複觸發
     st.query_params.clear()
-    st.toast("🚨 [GITHUB AUTH SUCCESS] 終極駭客模擬器已成功解鎖！", icon="🚨")
 
 # ==========================================
 # 2. 外部 API 快取與擷取 + 天氣中文與格式化處理
@@ -49,14 +49,13 @@ if "github_token_auth" in query_params and query_params["github_token_auth"] == 
 @st.cache_data(ttl=600)
 def get_formatted_weather():
     try:
-        # 使用 ?m 強制公制(攝氏)，%c=天氣圖標, %t=溫度, %h=濕度, %w=風速, %C=天氣文字描述
+        # 使用 ?m 強制公制(攝氏)
         response = requests.get("https://wttr.in/Gukeng?m&format=%c|%t|%h|%w|%C", timeout=5)
         if response.status_code == 200:
             parts = response.text.strip().split('|')
             if len(parts) >= 5:
                 icon, temp, humidity, wind, condition = parts[0], parts[1], parts[2], parts[3], parts[4]
                 
-                # 簡單的天氣英文描述轉中文映射
                 condition_lower = condition.lower()
                 weather_zh = "未知"
                 if "clear" in condition_lower or "sunny" in condition_lower:
@@ -70,11 +69,9 @@ def get_formatted_weather():
                 elif "snow" in condition_lower:
                     weather_zh = "下雪"
                 else:
-                    weather_zh = condition # 若無對應則保留原文
+                    weather_zh = condition
                 
-                # 去除溫度中可能多餘的加號
                 temp = temp.replace("+", "").strip()
-                # 組合使用者要求的格式：當地氣溫/濕度+天氣(晴朗/多雲/......)+風速
                 return f"{icon} {temp} / {humidity} 濕度 + 天氣({weather_zh}) + 風速 {wind}"
     except Exception:
         pass
@@ -120,12 +117,12 @@ radar_data = {
 }
 
 # ==========================================
-# 4. 全域 CSS 強力黑化 (包含徹底抹除頂部大白條)
+# 4. 全域 CSS 強力黑化 (徹底消滅頂部與組件白邊)
 # ==========================================
 hacker_css = ""
 if is_hacker:
     hacker_css = """
-        /* 🛠️ 修正點：強力將最頂端官方 Header 白條、選單按鈕完全漆成純黑 */
+        /* 徹底漆黑網頁最頂端的 Streamlit 裝飾白條 */
         header[data-testid="stHeader"], [data-testid="stHeader"] {
             background-color: #0d0d0d !important;
             background: #0d0d0d !important;
@@ -136,7 +133,7 @@ if is_hacker:
             fill: #00ff66 !important;
         }
 
-        /* 全域背景與基礎組件綠化 */
+        /* 全域背景黑化與綠色字體 */
         .stApp { background-color: #0d0d0d !important; color: #00ff66 !important; font-family: 'Courier New', monospace !important; }
         [data-testid="stSidebar"] { background-color: #1a1a1a !important; color: #00ff66 !important; border-right: 1px solid #00ff66; }
         [data-testid="stMetric"] { background-color: #111111 !important; border: 1px solid #00ff66 !important; border-radius: 8px; padding: 10px; }
@@ -144,44 +141,36 @@ if is_hacker:
         textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         
-        /* 優化新聞連結顏色，避免黑底刺眼 */
+        /* 淡藍色優化新聞連結 */
         a { color: #88ccff !important; text-decoration: none !important; }
         a:hover { color: #00ff66 !important; text-decoration: underline !important; }
 
-        /* 強制按鈕改為純黑底＋螢光綠框線 */
+        /* 按鈕全黑底高亮綠邊 */
         div[data-testid="stButton"] button {
             background-color: #000000 !important;
             color: #00ff66 !important;
             border: 1px solid #00ff66 !important;
             font-weight: bold !important;
-            font-family: 'Courier New', monospace !important;
-            transition: all 0.3s ease !important;
         }
         div[data-testid="stButton"] button:hover {
             background-color: #00ff66 !important;
             color: #000000 !important;
-            box-shadow: 0 0 10px #00ff66 !important;
         }
 
-        /* 強力阻擊 st.info() 穿幫白底，將通知區塊徹底變為極客黑底綠字 */
+        /* 移除 st.info 的死白底色，轉為純黑底綠字 */
         div[data-testid="stNotification"], div[data-testid="stAlert"] {
             background-color: #000000 !important;
             color: #00ff66 !important;
             border: 1px solid #00ff66 !important;
         }
-        div[data-testid="stNotification"] div, div[data-testid="stAlert"] div {
-            color: #00ff66 !important;
-        }
-        div[data-testid="stNotification"] svg, div[data-testid="stAlert"] svg {
-            fill: #00ff66 !important;
-            color: #00ff66 !important;
-        }
+        div[data-testid="stNotification"] div, div[data-testid="stAlert"] div { color: #00ff66 !important; }
+        div[data-testid="stNotification"] svg, div[data-testid="stAlert"] svg { fill: #00ff66 !important; color: #00ff66 !important; }
     """
 
 st.markdown(f"<style>{hacker_css}</style>", unsafe_allow_html=True)
 
 # ==========================================
-# 5. 鍵盤事件與 GitHub API 模擬通訊 JS 注入 (F1 & F2 監聽)
+# 5. 鍵盤事件與前端密碼跳轉控制 (F1 & F2 監聽)
 # ==========================================
 st.components.v1.html("""
     <script>
@@ -199,11 +188,8 @@ st.components.v1.html("""
         }
         if (e.key === 'F2') {
             e.preventDefault();
-            
-            // 彈出基於 GitHub Token 認證邏輯的輸入框
             let token = prompt("🔑 [GITHUB SECURITY OAUTH] Enter github.com Personal Access Token:");
             if (token !== null && token.trim() !== "") {
-                // 利用前端 URL 變更直接繞過 Streamlit Input 容易丟失值的問題，100% 成功觸發後端驗證
                 const url = new URL(window.parent.location.href);
                 url.searchParams.set('github_token_auth', token.trim());
                 window.parent.location.href = url.href;
@@ -226,7 +212,7 @@ with col_info1:
     with st.container(border=True):
         st.subheader("📍 即時環境 (雲林古坑)")
         st.markdown(f"**wttr.in 起始數據**")
-        st.info(get_formatted_weather()) # 天氣直接顯示在綠框黑底內
+        st.info(get_formatted_weather())
 
 with col_info2:
     with st.container(border=True):
@@ -274,7 +260,7 @@ with col_left:
     render_knowledge_base()
 
 with col_right:
-    # 1. 雙模軍用動態聲納雷達
+    # 1. 雙模軍用動態聲納雷達 (完美修復 JavaScript 語法中斷問題)
     with st.container(border=True):
         st.subheader("🛰️ 軍用即時聲納雷達監控")
         
@@ -333,7 +319,7 @@ with col_right:
                     let y1 = cy + maxRadius * Math.sin(rad);
                     let x2 = cx + (maxRadius - (a % 30 === 0 ? 8 : 4)) * Math.cos(rad);
                     let y2 = cy + (maxRadius - (a % 30 === 0 ? 8 : 4)) * Math.sin(rad);
-                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); stroke();
+                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
                 }}
                 
                 ctx.beginPath();
@@ -402,7 +388,7 @@ with col_right:
         """
         st.components.v1.html(radar_html, height=390)
 
-    # 2. 下方區塊：解鎖後的【極客黑客終極模擬器】或 事件日誌流
+    # 2. 下方區塊：驗證成功切換動態日誌
     with st.container(border=True):
         if st.session_state.hacker_simulator_unlocked:
             st.subheader("🚨 極客黑客終極模擬器 (Matrix Core)")
@@ -462,5 +448,4 @@ with col_right:
                 f"[{log_time}] [JS_KERNEL] F1(切換)/F2(解鎖) 核心監聽器已安全就緒。"
             ]
             
-            # 使用 st.info 輸出，並依靠 CSS 將黑底綠字在駭客模式下完美渲染
             st.info("\n".join(logs))
