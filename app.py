@@ -4,13 +4,14 @@ import numpy as np
 import requests
 import feedparser
 import os
+import re
 from datetime import datetime
 
 # ==========================================
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Military Hacker Station v3.0",
+    page_title="Military Hacker Station v3.2",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -32,14 +33,38 @@ if "hacker_simulator_unlocked" not in st.session_state:
     st.session_state.hacker_simulator_unlocked = False
 
 # ==========================================
-# 1. 外部 API 快取與擷取
+# 1. 外部 API 快取與擷取 + 天氣中文與格式化處理
 # ==========================================
 @st.cache_data(ttl=600)
-def get_weather():
+def get_formatted_weather():
     try:
-        response = requests.get("https://wttr.in/Gukeng?format=%c+%t+%h+%w", timeout=5)
+        # 使用 ?m 強制公制(攝氏)，%c=天氣圖標, %t=溫度, %h=濕度, %w=風速, %C=天氣文字描述
+        response = requests.get("https://wttr.in/Gukeng?m&format=%c|%t|%h|%w|%C", timeout=5)
         if response.status_code == 200:
-            return response.text.strip()
+            parts = response.text.strip().split('|')
+            if len(parts) >= 5:
+                icon, temp, humidity, wind, condition = parts[0], parts[1], parts[2], parts[3], parts[4]
+                
+                # 簡單的天氣英文描述轉中文映射
+                condition_lower = condition.lower()
+                weather_zh = "未知"
+                if "clear" in condition_lower or "sunny" in condition_lower:
+                    weather_zh = "晴朗"
+                elif "cloudy" in condition_lower or "overcast" in condition_lower:
+                    weather_zh = "多雲/陰天"
+                elif "rain" in condition_lower or "shower" in condition_lower:
+                    weather_zh = "有雨"
+                elif "mist" in condition_lower or "fog" in condition_lower:
+                    weather_zh = "有霧"
+                elif "snow" in condition_lower:
+                    weather_zh = "下雪"
+                else:
+                    weather_zh = condition # 若無對應則保留原文
+                
+                # 去除溫度中可能多餘的加號，並標準化單位
+                temp = temp.replace("+", "").strip()
+                # 組合使用者要求的格式：當地氣溫/濕度+天氣(晴朗/多雲/......)+風速
+                return f"{icon} {temp} / {humidity} 濕度 + 天氣({weather_zh}) + 風速 {wind}"
     except Exception:
         pass
     return "⛅ 無法取得即時天氣資訊"
@@ -75,7 +100,6 @@ with st.sidebar:
     val_energy = st.slider("精力續航力", 0, 100, 80)
     val_delivery = st.slider("專案交付率", 0, 100, 95)
 
-# 用於傳遞給前端 Canvas 雷達的數據字典
 radar_data = {
     "Coding": val_coding,
     "Focus": val_focus,
@@ -97,40 +121,44 @@ if secret_trigger == "1030622":
 # ==========================================
 hacker_css = ""
 if is_hacker:
- hacker_css = """
-    /* 全域背景與文字顏色變更 */
-    .stApp { background-color: #0d0d0d !important; color: #00ff66 !important; font-family: 'Courier New', monospace !important; }
-    [data-testid="stSidebar"] { background-color: #1a1a1a !important; color: #00ff66 !important; border-right: 1px solid #00ff66; }
-    [data-testid="stMetric"] { background-color: #111111 !important; border: 1px solid #00ff66 !important; border-radius: 8px; padding: 10px; }
-    div[data-testid="stContainer"] { border: 1px solid #00ff66 !important; background-color: #111111 !important; color: #00ff66 !important; }
-    textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
-    p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
-    
-    /* 🛠️ 1. 深度修正：強制將所有 Streamlit 按鈕背景全黑、綠框、綠字 */
-    div[data-testid="stButton"] button {
-        background-color: #000000 !important;
-        color: #00ff66 !important;
-        border: 1px solid #00ff66 !important;
-        font-weight: bold !important;
-        font-family: 'Courier New', monospace !important;
-        transition: all 0.3s ease !important;
-    }
-    div[data-testid="stButton"] button:hover {
-        background-color: #00ff66 !important;
-        color: #000000 !important;
-        box-shadow: 0 0 10px #00ff66 !important;
-    }
+    hacker_css = """
+        /* 全域背景與基礎組件綠化 */
+        .stApp { background-color: #0d0d0d !important; color: #00ff66 !important; font-family: 'Courier New', monospace !important; }
+        [data-testid="stSidebar"] { background-color: #1a1a1a !important; color: #00ff66 !important; border-right: 1px solid #00ff66; }
+        [data-testid="stMetric"] { background-color: #111111 !important; border: 1px solid #00ff66 !important; border-radius: 8px; padding: 10px; }
+        div[data-testid="stContainer"] { border: 1px solid #00ff66 !important; background-color: #111111 !important; color: #00ff66 !important; }
+        textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
+        p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
+        
+        /* 🛠️ 修正點：深度強制按鈕改為純黑底＋螢光綠框線 */
+        div[data-testid="stButton"] button {
+            background-color: #000000 !important;
+            color: #00ff66 !important;
+            border: 1px solid #00ff66 !important;
+            font-weight: bold !important;
+            font-family: 'Courier New', monospace !important;
+            transition: all 0.3s ease !important;
+        }
+        div[data-testid="stButton"] button:hover {
+            background-color: #00ff66 !important;
+            color: #000000 !important;
+            box-shadow: 0 0 10px #00ff66 !important;
+        }
 
-    /* 🛠️ 2. 深度修正：將 st.info() 穿幫的白色區塊徹底抹黑，只留綠字與綠框 */
-    div[data-testid="stAlert"] {
-        background-color: #111111 !important;
-        color: #00ff66 !important;
-        border: 1px solid #004411 !important;
-    }
-    div[data-testid="stAlert"] div {
-        color: #00ff66 !important;
-    }
-"""
+        /* 🛠️ 修正點：強力阻擊 st.info() 穿幫白底，將通知區塊徹底變為極客黑底綠字 */
+        div[data-testid="stNotification"], div[data-testid="stAlert"] {
+            background-color: #000000 !important;
+            color: #00ff66 !important;
+            border: 1px solid #00ff66 !important;
+        }
+        div[data-testid="stNotification"] div, div[data-testid="stAlert"] div {
+            color: #00ff66 !important;
+        }
+        div[data-testid="stNotification"] svg, div[data-testid="stAlert"] svg {
+            fill: #00ff66 !important;
+            color: #00ff66 !important;
+        }
+    """
 
 st.markdown(f"<style>{hacker_css}</style>", unsafe_allow_html=True)
 
@@ -176,7 +204,8 @@ col_info1, col_info2 = st.columns([1, 2])
 with col_info1:
     with st.container(border=True):
         st.subheader("📍 即時環境 (雲林古坑)")
-        st.metric(label="wttr.in 觀測數據", value=get_weather())
+        st.markdown(f"**wttr.in 觀測數據**")
+        st.info(get_formatted_weather()) # 天氣直接顯示在綠框黑底內 (在駭客模式下)
 
 with col_info2:
     with st.container(border=True):
@@ -229,7 +258,6 @@ with col_right:
         st.subheader("🛰️ 軍用即時聲納雷達監控")
         
         is_hacker_js = "true" if is_hacker else "false"
-        
         radar_html = f"""
         <div style="text-align: center; background: { '#03120E' if is_hacker else '#f7f9fa' }; padding: 10px; border-radius: 8px;">
             <canvas id="militaryRadar" width="360" height="360"></canvas>
@@ -340,7 +368,6 @@ with col_right:
                         
                         ctx.fillStyle = colors.line;
                         ctx.font = "9px monospace";
-                        // 🛠️ 修正此處：改用傳統字串拼接，避開 Python 變數解析衝突
                         ctx.fillText("[TRGT:" + t.name + " " + t.val + "%]", tx + 8, ty - 2);
                     }}
                 }});
@@ -354,7 +381,7 @@ with col_right:
         """
         st.components.v1.html(radar_html, height=390)
 
-    # 2. 下方區塊：解鎖後的【極客黑客終極模擬器】
+    # 2. 下方區塊：解鎖後的【極客黑客終極模擬器】或 事件日誌流
     with st.container(border=True):
         if st.session_state.hacker_simulator_unlocked:
             st.subheader("🚨 極客黑客終極模擬器 (Matrix Core)")
@@ -412,7 +439,6 @@ with col_right:
                 f"[{log_time}] [NETWORK] 天氣與新聞快取同步中。",
                 f"[{log_time}] [JS_KERNEL] F1(切換)/F2(解鎖) 核心監聽器已安全就緒。"
             ]
-            if is_hacker:
-                st.code("\n".join(logs), language="bash")
-            else:
-                for log in logs: st.info(log)
+            
+            # 使用 st.info 輸出，並依靠 CSS 將黑底綠字在駭客模式下完美渲染
+            st.info("\n".join(logs))
