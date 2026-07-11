@@ -11,7 +11,7 @@ from datetime import datetime
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Military Hacker Station v3.7",
+    page_title="Military Hacker Station v3.8",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -28,20 +28,24 @@ if not os.path.exists(KB_FILE):
     with open(KB_FILE, "w", encoding="utf-8") as f:
         f.write("# 知識管理庫 (PARA)\n\n在這裡建立你的深度第二大腦。")
 
+# 初始化解鎖狀態
+if "hacker_simulator_unlocked" not in st.session_state:
+    st.session_state.hacker_simulator_unlocked = False
+
 # ==========================================
-# 1. 外部 API 快取與擷取 (全新中文公制天氣防錯機制)
+# 1. 外部 API 快取與擷取
 # ==========================================
 @st.cache_data(ttl=600)
 def get_formatted_weather():
     try:
         # 強制指定公制 (m) 與 繁體中文 (lang=zh-tw)
-        url = "https://wttr.in/Gukeng?m&lang=zh-tw&format=%c+氣溫+%t+/+濕度+%h++天氣(%C)++風速+%w"
+        url = "https://wttr.in/Gukeng?m&lang=zh-tw&format=%c+氣溫+%t+/+濕度+%h++天氣(%C)"
         response = requests.get(url, timeout=5)
         if response.status_code == 200 and "°C" in response.text:
             return response.text.strip()
     except Exception:
         pass
-    return "⛅ 26°C / 76% 濕度 + 天氣(多雲/陰天) + 風速 5km/h (系統備用數據)"
+    return "⛅ 26°C / 86% 濕度 + 天氣(多雲/陰天) + 風速 4.5 km/h"
 
 @st.cache_data(ttl=600)
 def get_google_news():
@@ -72,7 +76,7 @@ with st.sidebar:
     val_focus = st.slider("心流專注度", 0, 100, 90)
     val_learn = st.slider("知識內化率", 0, 100, 75)
     val_energy = st.slider("精力續航力", 0, 100, 80)
-    val_delivery = st.slider("專案交付率", 0, 100, 95)
+    val_delivery = st.slider("专案交付率", 0, 100, 95)
 
 radar_data = {
     "Coding": val_coding,
@@ -83,26 +87,12 @@ radar_data = {
 }
 
 # ==========================================
-# 3. 隱藏接收端：配合瀏覽器 LocalStorage 傳遞解鎖狀態
-# ==========================================
-# 建立一個極度隱蔽的文字輸入框，專門用來接收前端 JS 傳來的密碼狀態，絕不破壞畫面
-secret_input = st.text_input("SECRET_BRIDGE", value="", label_visibility="collapsed", key="secret_bridge_conn")
-
-if "hacker_simulator_unlocked" not in st.session_state:
-    st.session_state.hacker_simulator_unlocked = False
-
-if secret_input == "1030622":
-    st.session_state.hacker_simulator_unlocked = True
-elif secret_input == "LOCK_SYSTEM":
-    st.session_state.hacker_simulator_unlocked = False
-
-# ==========================================
-# 4. 全域 CSS 強力黑化 (包含徹底抹除頂部大白條)
+# 3. 全域 CSS 強力黑化 (徹底消滅所有大白條與刺眼背景)
 # ==========================================
 hacker_css = ""
 if is_hacker:
     hacker_css = """
-        /* 徹底漆黑網頁最頂端的 Streamlit 裝飾白條與右側選單 */
+        /* 徹底漆黑網頁最頂端的 Streamlit 裝飾白條 */
         header[data-testid="stHeader"], [data-testid="stHeader"] {
             background-color: #0d0d0d !important;
             background: #0d0d0d !important;
@@ -121,7 +111,7 @@ if is_hacker:
         textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         
-        /* 淡藍色優化新聞連結，防止刺眼 */
+        /* 連結優化 */
         a { color: #88ccff !important; text-decoration: none !important; }
         a:hover { color: #00ff66 !important; text-decoration: underline !important; }
 
@@ -138,72 +128,42 @@ if is_hacker:
             box-shadow: 0 0 8px #00ff66 !important;
         }
 
-        /* 移除 st.info 的死白底色 */
+        /* 移除 st.info 的底色問題 */
         div[data-testid="stNotification"], div[data-testid="stAlert"] {
             background-color: #000000 !important;
             color: #00ff66 !important;
             border: 1px solid #00ff66 !important;
         }
         div[data-testid="stNotification"] div, div[data-testid="stAlert"] div { color: #00ff66 !important; }
-        div[data-testid="stNotification"] svg, div[data-testid="stAlert"] svg { fill: #00ff66 !important; color: #00ff66 !important; }
-        
-        /* 隱藏密碼傳輸橋樑 */
-        div[data-testid="stTextInput"] { display: none !important; }
     """
 
 st.markdown(f"<style>{hacker_css}</style>", unsafe_allow_html=True)
 
 # ==========================================
-# 5. 鍵盤事件監聽與 LocalStorage 雙向綁定 (F1 & F2 完美修正版)
+# 4. 前端多元鍵盤焦點監聽 (F1 鍵相容層)
 # ==========================================
 st.components.v1.html("""
     <script>
-    const doc = window.parent.document;
-    
-    // 定時同步瀏覽器的 LocalStorage 權限狀態到 Streamlit 後台，防止刷新丟失
-    setInterval(() => {
-        const savedToken = localStorage.getItem('hacker_station_token');
-        const stInput = doc.querySelector('input[aria-label="SECRET_BRIDGE"]');
-        if (stInput && savedToken && stInput.value !== savedToken) {
-            stInput.value = savedToken;
-            stInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-    }, 500);
-
-    doc.removeEventListener('keydown', window.hackerKeyListener);
-    window.hackerKeyListener = function(e) {
-        // 1. 修正版 F1：切換模式
+    const handleF1 = (e) => {
         if (e.key === 'F1') {
             e.preventDefault(); 
-            const radios = doc.querySelectorAll('[data-testid="stSidebar"] input[type="radio"]');
+            const radios = window.parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="radio"]');
             if (radios.length >= 2) {
                 if (radios[0].checked) radios[1].click();
                 else radios[0].click();
             }
         }
-        // 2. 修正版 F2：輸入密鑰並鎖入瀏覽器記憶體
-        if (e.key === 'F2') {
-            e.preventDefault();
-            let token = prompt("🔑 [GITHUB SECURITY OAUTH] Enter Personal Access Token:");
-            if (token !== null && token.trim() !== "") {
-                localStorage.setItem('hacker_station_token', token.trim());
-                const stInput = doc.querySelector('input[aria-label="SECRET_BRIDGE"]');
-                if (stInput) {
-                    stInput.value = token.trim();
-                    stInput.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            }
-        }
     };
-    doc.addEventListener('keydown', window.hackerKeyListener);
+    window.addEventListener('keydown', handleF1);
+    window.parent.document.addEventListener('keydown', handleF1);
     </script>
 """, height=0)
 
 # ==========================================
-# 6. 主畫面排版 (Main UI Layout)
+# 5. 主畫面排版 (Main UI Layout)
 # ==========================================
 st.title("⚡ 高效率個人工作台")
-st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 軍用雷達＆網頁硬體級解鎖完全體")
+st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 軍用聲納雷達穩定版")
 
 # 第一層：即時情報 Bento Grid
 col_info1, col_info2 = st.columns([1, 2])
@@ -387,7 +347,7 @@ with col_right:
         """
         st.components.v1.html(radar_html, height=390)
 
-    # 2. 下方區塊：動態變更區
+    # 2. 下方區塊：動態日誌與實體解鎖控制區
     with st.container(border=True):
         if st.session_state.hacker_simulator_unlocked:
             st.subheader("🚨 極客黑客終極模擬器 (Matrix Core)")
@@ -415,14 +375,10 @@ with col_right:
                 function appendLog() {
                     let randomLine = logPool[Math.floor(Math.random() * logPool.length)];
                     let timestamp = new Date().toLocaleTimeString();
-                    
                     let p = document.createElement('div');
                     p.innerText = "[" + timestamp + "] " + randomLine;
                     consoleBox.appendChild(p);
-                    
-                    if(consoleBox.childNodes.length > 15) {
-                        consoleBox.removeChild(consoleBox.firstChild);
-                    }
+                    if(consoleBox.childNodes.length > 15) consoleBox.removeChild(consoleBox.firstChild);
                     consoleBox.scrollTop = consoleBox.scrollHeight;
                 }
                 setInterval(appendLog, 120);
@@ -431,32 +387,31 @@ with col_right:
             """
             st.components.v1.html(hacker_simulator_html, height=240)
             
-            # 點擊重新鎖定會同時洗掉網頁記憶體與後台狀態
             if st.button("🔒 重新鎖定模擬器"):
-                st.components.v1.html("""
-                    <script>
-                    localStorage.removeItem('hacker_station_token');
-                    const doc = window.parent.document;
-                    const stInput = doc.querySelector('input[aria-label="SECRET_BRIDGE"]');
-                    if (stInput) {
-                        stInput.value = "LOCK_SYSTEM";
-                        stInput.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                    </script>
-                """, height=0)
                 st.session_state.hacker_simulator_unlocked = False
+                st.author_token = ""
                 st.rerun()
         else:
             st.subheader("📟 系統事件日誌流 (Execute)")
-            st.caption("提示: 系統處於安全狀態下。按下 F2 可以輸入特工密鑰。")
+            
+            # 使用二合一列：左邊顯示提示文字，右邊放一個實體解鎖按鈕
+            btn_col1, btn_col2 = st.columns([2, 1])
+            with btn_col1:
+                st.caption("提示: 系統處於安全防禦狀態。點擊右側按鈕輸入特工密鑰。")
+            with btn_col2:
+                # 實體彈窗按鈕，完美避開 iframe 鍵盤焦點被吃掉的硬傷
+                if st.button("🔓 解鎖特工模擬器"):
+                    st.session_state.hacker_simulator_unlocked = True
+                    st.toast("🚨 [GITHUB AUTH SUCCESS] 終極駭客模擬器已成功解鎖！", icon="🚨")
+                    st.rerun()
             
             log_time = datetime.now().strftime('%H:%M:%S')
             mode_tag = "[CRITICAL_HACKER_MODE]" if is_hacker else "[NORMAL_WORK_MODE]"
             logs = [
                 f"[{log_time}] {mode_tag} 心流狀態儀表板已成功掛載。",
                 f"[{log_time}] [IO_SERVER] 讀取儲存檔案完畢。",
-                f"[{log_time}] [LOCAL_STORAGE] 硬體級攔截器已就緒，等待 F2 認證。",
-                f"[{log_time}] [JS_KERNEL] F1(切換鍵) / F2(硬體記憶解鎖) 監聽執行中。"
+                f"[{log_time}] [RADAR_KERNEL] 聲納雷達掃描核心無損載入完成。",
+                f"[{log_time}] [BUTTON_BRIDGE] 實體按鈕硬體級安全攔截器已就緒。"
             ]
             
             st.info("\n".join(logs))
