@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v4.2",
+    page_title="Cyber Hacker Workstation v4.3",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -22,7 +22,7 @@ NOTE_FILE = "sticky_notes.txt"
 KB_FILE = "my_knowledge_base.md"
 DOC_FILE = "cyber_document.md"
 
-# 🟢 初始化檔案（強制將 Word/PPT 核心文本重置為空字串，確保畫面絕對乾淨）
+# 初始化檔案（強制將 Word/PPT 核心文本重置為空字串，確保畫面絕對乾淨）
 if "doc_initialized" not in st.session_state:
     with open(DOC_FILE, "w", encoding="utf-8") as f:
         f.write("")
@@ -118,8 +118,21 @@ if is_hacker:
         textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; }
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         a { color: #88ccff !important; }
-        div[data-testid="stButton"] button { background-color: #000000 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-weight: bold !important; }
-        div[data-testid="stButton"] button:hover { background-color: #00ff66 !important; color: #000000 !important; box-shadow: 0 0 8px #00ff66 !important; }
+        
+        /* 🟢 修正：強制壓制普通按鈕與下載按鈕外殼，消滅亮白區塊 */
+        div[data-testid="stButton"] button, div[data-testid="stDownloadButton"] button, div[data-testid="stDownloadButton"] a { 
+            background-color: #000000 !important; 
+            color: #00ff66 !important; 
+            border: 1px solid #00ff66 !important; 
+            font-weight: bold !important; 
+            text-shadow: none !important;
+        }
+        div[data-testid="stButton"] button:hover, div[data-testid="stDownloadButton"] button:hover { 
+            background-color: #00ff66 !important; 
+            color: #000000 !important; 
+            box-shadow: 0 0 8px #00ff66 !important; 
+        }
+        
         div[data-testid="stNotification"], div[data-testid="stAlert"] { background-color: #000000 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; }
     """
 
@@ -166,8 +179,8 @@ st.components.v1.html("""
 # ==========================================
 # 5. 主畫面排版 (Main UI Layout)
 # ==========================================
-st.title("⚡ 高效率個人工作台 v4.2")
-st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 雙模文書終端 (強效純淨版)")
+st.title("⚡ 高效率個人工作台 v4.3")
+st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 雙模文書終端 (視覺修復完美版)")
 
 # 第一層：即時情報 Bento Grid
 col_info1, col_info2 = st.columns([1, 2])
