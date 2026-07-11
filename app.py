@@ -87,7 +87,6 @@ radar_data = {
 # ==========================================
 # 3. 處理 F2 密碼解鎖後台接收
 # ==========================================
-# 建立一個隱藏的輸入框，由前端 JavaScript 填入並觸發表單
 secret_trigger = st.text_input("Secret Trigger", key="secret_trigger", label_visibility="collapsed")
 if secret_trigger == "1030622":
     st.session_state.hacker_simulator_unlocked = True
@@ -96,7 +95,6 @@ if secret_trigger == "1030622":
 # ==========================================
 # 4. 全域 CSS 與 鍵盤事件 JS 注入 (F1 & F2 監聽)
 # ==========================================
-# 基礎樣式與【全黑按鈕】優化
 hacker_css = ""
 if is_hacker:
     hacker_css = """
@@ -107,7 +105,6 @@ if is_hacker:
         textarea, input { background-color: #151515 !important; color: #00ff66 !important; border: 1px solid #00ff66 !important; font-family: 'Courier New', monospace !important; }
         p, li, h1, h2, h3, h4, h5, h6, span, label { color: #00ff66 !important; }
         
-        /* 🛠️ 駭客模式下的全黑按鈕 */
         button[data-testid="baseButton-secondary"] {
             background-color: #000000 !important;
             color: #00ff66 !important;
@@ -125,12 +122,10 @@ if is_hacker:
 
 st.markdown(f"<style>{hacker_css}</style>", unsafe_allow_html=True)
 
-# 注入 F1 切換、F2 密碼彈窗的 JavaScript
 st.components.v1.html(f"""
     <script>
     const doc = window.parent.document;
     
-    // 監聽 F1 與 F2
     doc.removeEventListener('keydown', window.hackerKeyListener);
     window.hackerKeyListener = function(e) {{
         if (e.key === 'F1') {{
@@ -145,7 +140,6 @@ st.components.v1.html(f"""
             e.preventDefault();
             let password = prompt("🔑 [SECURITY AUTHENTICATION] 請輸入特工解鎖密碼:");
             if (password !== null) {{
-                // 找到 Streamlit 的隱藏輸入框並填值
                 const inputs = doc.querySelectorAll('input[aria-label="Secret Trigger"]');
                 if (inputs.length > 0) {{
                     inputs[0].value = password;
@@ -165,7 +159,7 @@ st.components.v1.html(f"""
 st.title("⚡ 高效個人工作台")
 st.caption(f"系統時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 軍用雷達＆極客解鎖完全體")
 
-# 第一層：即時情報 Bento Grid (天氣與焦點新聞)
+# 第一層：即時情報 Bento Grid
 col_info1, col_info2 = st.columns([1, 2])
 with col_info1:
     with st.container(border=True):
@@ -184,10 +178,9 @@ with col_info2:
 
 st.write("") 
 
-# 第二層：核心工作區 (雙欄排版)
+# 第二層：核心工作區
 col_left, col_right = st.columns([3, 2])
 
-# --- 左側欄：輸入與處理端 (採用 Fragment 確保重新整理時不干擾 Canvas) ---
 with col_left:
     @st.fragment
     def render_sticky_notes():
@@ -218,13 +211,11 @@ with col_left:
     st.write("")
     render_knowledge_base()
 
-# --- 右側欄：軍用雷達與日誌打碼模擬器 (純 HTML5 Canvas 60FPS 極致流暢) ---
 with col_right:
-    # 1. 雙模軍用動態聲納雷達 (HTML5 Canvas)
+    # 1. 雙模軍用動態聲納雷達
     with st.container(border=True):
         st.subheader("🛰️ 軍用即時聲納雷達監控")
         
-        # 將變數代入 JS Canvas 中
         is_hacker_js = "true" if is_hacker else "false"
         
         radar_html = f"""
@@ -237,7 +228,6 @@ with col_right:
             const ctx = canvas.getContext('2d');
             const isHacker = {is_hacker_js};
             
-            // 主題配色設定
             const colors = isHacker ? {{
                 bg: '#03120E', grid: '#004411', line: '#00ebd4', sweep: 'rgba(0, 235, 212, 0.15)', target: '#00ffcc'
             }} : {{
@@ -249,7 +239,6 @@ with col_right:
             const cy = canvas.height / 2;
             const maxRadius = 150;
             
-            // 讀取後端能力指標作為目標點
             const targets = [
                 {{ name: 'Coding', val: {radar_data['Coding']}, angle: -Math.PI/2 }},
                 {{ name: 'Focus', val: {radar_data['Focus']}, angle: -Math.PI/2 + (Math.PI*2/5) }},
@@ -258,14 +247,12 @@ with col_right:
                 {{ name: 'Delivery', val: {radar_data['Delivery']}, angle: -Math.PI/2 + (Math.PI*2/5)*4 }}
             ];
             
-            // 紀錄每個目標的發光強度
             targets.forEach(t => t.intensity = 0);
 
             function draw() {{
                 ctx.fillStyle = colors.bg;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // 1. 繪製圓形雷達網格與十字架
                 ctx.strokeStyle = colors.grid;
                 ctx.lineWidth = 1;
                 for(let r = 30; r <= maxRadius; r += 30) {{
@@ -278,7 +265,6 @@ with col_right:
                 ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius);
                 ctx.stroke();
                 
-                // 外圈刻度線
                 ctx.strokeStyle = colors.grid;
                 for(let a=0; a<360; a+=10) {{
                     let rad = a * Math.PI / 180;
@@ -289,7 +275,6 @@ with col_right:
                     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
                 }}
                 
-                // 2. 繪製連動的多邊形狀態面 (雷達核心數據)
                 ctx.beginPath();
                 targets.forEach((t, i) => {{
                     let r = (t.val / 100) * maxRadius;
@@ -304,8 +289,6 @@ with col_right:
                 ctx.fillStyle = isHacker ? 'rgba(0,255,102,0.1)' : 'rgba(255,75,75,0.08)';
                 ctx.fill();
 
-                // 3. 繪製動態雷達掃描扇面
-                ctx.fillStyle = ctx.createRadialGradient(cx, cy, 10, cx, cy, maxRadius);
                 ctx.fillStyle = colors.sweep;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
@@ -313,7 +296,6 @@ with col_right:
                 ctx.closePath();
                 ctx.fill();
                 
-                // 掃描主導線
                 ctx.strokeStyle = colors.line;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
@@ -321,20 +303,18 @@ with col_right:
                 ctx.lineTo(cx + maxRadius * Math.cos(angle + 0.4), cy + maxRadius * Math.sin(angle + 0.4));
                 ctx.stroke();
 
-                // 4. 繪製追蹤目標點並計算掃描高亮
                 targets.forEach(t => {{
                     let r = (t.val / 100) * maxRadius;
                     let tx = cx + r * Math.cos(t.angle);
                     let ty = cy + r * Math.sin(t.angle);
                     
-                    // 計算掃描線與目標點的角度差，若被掃到則激發高亮
                     let diff = (angle + 0.4) - t.angle;
                     while (diff < 0) diff += Math.PI * 2;
                     diff = diff % (Math.PI * 2);
                     if (diff < 0.15) {{
                         t.intensity = 1.0;
                     }} else {{
-                        t.intensity *= 0.98; // 逐漸淡出 (Fade out)
+                        t.intensity *= 0.98;
                     }}
                     
                     if (t.intensity > 0.05) {{
@@ -344,16 +324,16 @@ with col_right:
                         ctx.beginPath();
                         ctx.arc(tx, ty, 5 * t.intensity + 2, 0, Math.PI*2);
                         ctx.fill();
-                        ctx.shadowBlur = 0; // 還原
+                        ctx.shadowBlur = 0;
                         
-                        // 戰術文字
                         ctx.fillStyle = colors.line;
                         ctx.font = "9px monospace";
-                        ctx.fillText(`[TRGT:${t.name} ${t.val}%]`, tx + 8, ty - 2);
+                        // 🛠️ 修正此處：改用傳統字串拼接，避開 Python 變數解析衝突
+                        ctx.fillText("[TRGT:" + t.name + " " + t.val + "%]", tx + 8, ty - 2);
                     }}
                 }});
 
-                angle += 0.015; // 控制雷達旋轉速度
+                angle += 0.015;
                 requestAnimationFrame(draw);
             }}
             draw();
@@ -362,14 +342,13 @@ with col_right:
         """
         st.components.v1.html(radar_html, height=390)
 
-    # 2. 下方區塊：一般事件日誌 vs 解鎖後的【極客黑客終極模擬器】
+    # 2. 下方區塊：解鎖後的【極客黑客終極模擬器】
     with st.container(border=True):
         if st.session_state.hacker_simulator_unlocked:
             st.subheader("🚨 極客黑客終極模擬器 (Matrix Core)")
             
-            # 60FPS 快速向下噴碼的駭客模擬器代碼
             hacker_simulator_html = """
-            <div id="simConsole" style="background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:10px; height:220px; overflow-hidden:hidden; border:1px solid #0f0; border-radius:5px; line-height:1.4;"></div>
+            <div id="simConsole" style="background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:10px; height:220px; overflow:hidden; border:1px solid #0f0; border-radius:5px; line-height:1.4;"></div>
             <script>
             (function(){
                 const consoleBox = document.getElementById('simConsole');
@@ -392,16 +371,15 @@ with col_right:
                     let timestamp = new Date().toLocaleTimeString();
                     
                     let p = document.createElement('div');
-                    p.innerText = `[${timestamp}] ${randomLine}`;
+                    p.innerText = "[" + timestamp + "] " + randomLine;
                     consoleBox.appendChild(p);
                     
-                    // 超出高度時滾動並刪除舊資料，維持流暢
                     if(consoleBox.childNodes.length > 15) {
                         consoleBox.removeChild(consoleBox.firstChild);
                     }
                     consoleBox.scrollTop = consoleBox.scrollHeight;
                 }
-                setInterval(appendLog, 120); // 瘋狂打碼刷新速率
+                setInterval(appendLog, 120);
             })();
             </script>
             """
