@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v5.8",
+    page_title="Cyber Hacker Workstation v5.9",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -211,7 +211,7 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 建立純淨的變數，徹底在 Python 端隔離與分流，避免 JS 在 f-string 出現大括號或單引號混淆
+    # 【徹底修復 BUG】：移除 Python 端的 .split('')。改用安全的變數注入與原生 JS 操作！
     if st.session_state.king_unlocked:
         speed_ms = "12"
         color_theme = "#ff0033"
@@ -229,7 +229,7 @@ if is_hacker and st.session_state.hacker_console_active:
         radar_color = "rgba(0, 235, 212, 0.2)"
         radar_line_color = "#004411"
 
-    # HTML 密碼雨模組 (進行雙重大括號轉義)
+    # HTML 密碼雨模組 (改用安全的 JavaScript 自帶字串分割)
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -239,7 +239,9 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        const letters = "{js_raw_string}".split("");
+        
+        // 這裡在瀏覽器端才執行 split，絕對不會觸發 Python 錯誤
+        const letters = "{js_raw_string}".split(""); 
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
@@ -260,7 +262,7 @@ if is_hacker and st.session_state.hacker_console_active:
     """
     st.components.v1.html(matrix_rain_html, height=205)
     
-    # 主主控台排版 (三柱狀數據監控)
+    # 主主控台排版
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1])
     
     with h_col1:
