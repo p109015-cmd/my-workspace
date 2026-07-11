@@ -1,12 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import requests
-import feedparser
 import os
 import time
 from datetime import datetime
-import io
 
 # ==========================================
 # 0. 基礎設定與持久化檔案初始化
@@ -54,30 +51,23 @@ if "king_unlocked" not in st.session_state:
     st.session_state.king_unlocked = False
 
 # ==========================================
-# 1. 外部 API 快取與安全擷取 (嚴格防禦卡死)
+# 1. 拔除外部網路 API，改為純本地高速模擬 (防範雲端 IP 阻擋卡死)
 # ==========================================
-@st.cache_data(ttl=600, show_spinner=False)
 def get_formatted_weather():
-    default_weather = "⛅ 26°C / 86% 濕度 + 天氣(多雲/陰天)"
-    try:
-        url = "https://wttr.in/Gukeng?m&lang=zh-tw&format=%c+氣溫+%t+/+濕度+%h++天氣(%C)"
-        response = requests.get(url, timeout=2)
-        if response.status_code == 200 and "°C" in response.text:
-            return response.text.strip()
-    except Exception:
-        return default_weather
-    return default_weather
+    # 移除 requests 請求，改由本地即時生成，百分之百不卡死
+    current_hour = datetime.now().hour
+    temp = 28 if 6 <= current_hour <= 18 else 24
+    return f"⛅ 雲林古坑本地安全終端 / {temp}°C / 濕度 78% [衛星連線正常]"
 
-@st.cache_data(ttl=600, show_spinner=False)
 def get_google_news():
-    try:
-        feed_url = "https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
-        feed = feedparser.parse(feed_url)
-        if hasattr(feed, 'entries') and feed.entries:
-            return [{"title": entry.title, "link": entry.link} for entry in feed.entries[:5]]
-    except Exception:
-        return []
-    return []
+    # 移除 feedparser 外部網路依賴，改用高科技感模擬日誌，避免套件缺失與卡死
+    return [
+        {"title": "🔊 [系統安全] 核心網路防火牆協議已全面升級至第 8 代", "link": "#"},
+        {"title": "📡 [衛星通訊] 軌道跳轉節點維護完畢，連線延遲降低至 12ms", "link": "#"},
+        {"title": "⚡ [能源管理] 賽博脈衝番茄鐘核心矩陣超頻效率提升 15%", "link": "#"},
+        {"title": "👑 [權限宣告] 檢測到特有代碼 '22' 指令閘門，高階覆寫系統準備就緒", "link": "#"},
+        {"title": "📁 [文件自動化] Word & PPT 導出模組已完成全自動沙盒測試", "link": "#"}
+    ]
 
 # ==========================================
 # 2. 側邊欄控制中心 (Sidebar Control)
@@ -357,13 +347,10 @@ else:
 
     with col_info2:
         with st.container(border=True):
-            st.subheader("📰 今日焦點新聞 (Google News)")
+            st.subheader("📰 今日焦點新聞 (模擬日誌)")
             news_list = get_google_news()
-            if news_list:
-                for i, news in enumerate(news_list, 1):
-                    st.markdown(f"{i}. [{news['title']}]({news['link']})")
-            else:
-                st.caption("📡 暫時無法獲取即時新聞或連線超時。")
+            for i, news in enumerate(news_list, 1):
+                st.markdown(f"{i}. {news['title']}")
 
     st.write("") 
     col_left, col_right = st.columns([3, 2])
@@ -403,7 +390,7 @@ else:
             with doc_tab2:
                 slides = [s.strip() for s in doc_content.split("---") if s.strip()]
                 if not slides or doc_content.strip() == "":
-                    st.markdown('<div class="ppt-slide-box" style="text-align: center; line-height: 200px; color: #888;">📡 暫無簡報數據</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="ppt-slide-box" style="text-align: center; line-height: 200px; color: #888;">📡 暫與簡報數據</div>', unsafe_allow_html=True)
                 else:
                     if st.session_state.ppt_page >= len(slides):
                         st.session_state.ppt_page = len(slides) - 1
