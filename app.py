@@ -12,7 +12,7 @@ import io
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v5.5",
+    page_title="Cyber Hacker Workstation v5.6",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -206,10 +206,15 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 密碼雨背景裝飾 (若密碼解鎖，瀑布速度與密度加倍)
+    # 密碼雨參數動態判定
     speed_ms = "15" if st.session_state.king_unlocked else "35"
     color_theme = "#ff0033" if st.session_state.king_unlocked else "#00ff66"
-    char_pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑".split('') if st.session_state.king_unlocked else '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙'.split('')
+    
+    # 用 JS 內建字串陣列處理，徹底避開 Python f-string 剖析錯誤
+    if st.session_state.king_unlocked:
+        js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑'.split('')"
+    else:
+        js_char_pool = "'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙'.split('')"
     
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
@@ -220,7 +225,7 @@ if is_hacker and st.session_state.hacker_console_active:
         const canvas = document.getElementById('fullscreenRain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
-        const letters = {char_pool};
+        const letters = {js_char_pool};
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
@@ -252,7 +257,6 @@ if is_hacker and st.session_state.hacker_console_active:
                 st.metric("權限等級", "ROOT / KING", "MAX")
                 st.metric("主機核心頻率", "8.4 GHz", "+500%")
             else:
-                st.subheader("📡 特工節點安全通訊")
                 st.metric("核心跳轉節點", "Proxy-Node-9", "+413ms")
                 st.metric("防禦壁壘狀態", "BYPASSED", "100%")
             st.progress(1.0, text="安全矩陣核心全域覆寫已完成")
@@ -295,25 +299,19 @@ if is_hacker and st.session_state.hacker_console_active:
         with st.container(border=True):
             st.subheader("☣️ 系統後台事件解密流")
             log_interval = "150" if st.session_state.king_unlocked else "400"
+            
+            # 用 JS 的方式組合陣列，避免大括號混淆
+            if st.session_state.king_unlocked:
+                js_active_pool = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...']"
+            else:
+                js_active_pool = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
+                
             console_log_html = f"""
             <div id="fullConsole" style="background:#000; color:{color_theme}; font-family:monospace; font-size:11px; padding:10px; height:210px; overflow:hidden;"></div>
             <script>
             (function(){{
                 const box = document.getElementById('fullConsole');
-                const logs = [
-                    "[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...",
-                    "[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F",
-                    "[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED",
-                    "[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE",
-                    "[SUCCESS] EXFILTRATING CORE COMPONENT DOCS..."
-                ];
-                const king_logs = [
-                    "[KING] BYPASSING INTEL AMTI GATE...",
-                    "[KING] DEPLOYING PROTOCOL 1030622...",
-                    "[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...",
-                    "[ROOT] ACCESS GRANTED TO ALL SATELLITES..."
-                ];
-                const activePool = { "king_logs.concat(logs)" if st.session_state.king_unlocked else "logs" };
+                const activePool = {js_active_pool};
                 setInterval(() => {{
                     let div = document.createElement('div');
                     div.innerText = "[" + new Date().toLocaleTimeString() + "] " + activePool[Math.floor(Math.random()*activePool.length)];
