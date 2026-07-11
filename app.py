@@ -211,11 +211,11 @@ if is_hacker and st.session_state.hacker_console_active:
             
     st.markdown("---")
     
-    # 【徹底修復 BUG】：移除 Python 端的 .split('')。改用安全的變數注入與原生 JS 操作！
+    # 【Bug 已修正】：此處將原本錯誤的 .split('') 移除，改用正確的原生 Python list() 函數拆解字串
     if st.session_state.king_unlocked:
         speed_ms = "12"
         color_theme = "#ff0033"
-        js_raw_string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑🔱"
+        char_pool = list("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙KING👑🔱")
         js_logs_array = "['[KING] BYPASSING INTEL AMTI GATE...', '[KING] DEPLOYING PROTOCOL 1030622...', '[CRITICAL] BROADCASTING MASTER COMMAND WORLDWIDE...', '[ROOT] ACCESS GRANTED TO ALL SATELLITES...', '[OVERCLOCK] SYSTEM HEATING UP TO 94C...']"
         radar_speed = "0.25"
         radar_color = "rgba(255, 0, 50, 0.3)"
@@ -223,13 +223,16 @@ if is_hacker and st.session_state.hacker_console_active:
     else:
         speed_ms = "35"
         color_theme = "#00ff66"
-        js_raw_string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙"
+        char_pool = list("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ☣☠⚡⚙")
         js_logs_array = "['[DECRYPT] TARGET IP: 192.168.1.99 DETECTED...', '[OVERRIDE] MEMORY INJECTION SUCCESSFUL AT BLOCK 0x0F', '[WARNING] FIREWALL ATTEMPTED TO BLOCK PACKET - DROPPED', '[SYS] ALL SYSTEMS RECONFIGURED TO BLACK-HAT MODE']"
         radar_speed = "0.08"
         radar_color = "rgba(0, 235, 212, 0.2)"
         radar_line_color = "#004411"
 
-    # HTML 密碼雨模組 (改用安全的 JavaScript 自帶字串分割)
+    # 將字串重新組合給 JS 模組使用，在前端才做原生 JavaScript 的 .split("")，確保安全
+    js_raw_string = "".join(char_pool)
+
+    # HTML 密碼雨模組
     matrix_rain_html = f"""
     <div style="background:#000; padding:10px; border:2px solid {color_theme}; border-radius:8px; margin-bottom:20px;">
         <canvas id="fullscreenRain" style="width:100%; height:180px; background:#000;"></canvas>
@@ -240,7 +243,7 @@ if is_hacker and st.session_state.hacker_console_active:
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = 180;
         
-        // 這裡在瀏覽器端才執行 split，絕對不會觸發 Python 錯誤
+        // 在瀏覽器端才執行 split，百分之百不會影響 Python
         const letters = "{js_raw_string}".split(""); 
         const fontSize = 14;
         const columns = canvas.width / fontSize;
