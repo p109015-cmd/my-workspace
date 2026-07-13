@@ -9,7 +9,7 @@ from datetime import datetime
 # 0. 基礎設定與持久化檔案初始化
 # ==========================================
 st.set_page_config(
-    page_title="Cyber Hacker Workstation v9.2",
+    page_title="Cyber Hacker Workstation v9.3",
     page_icon="👑",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,7 +34,8 @@ for file, default_content in [
             with open(file, "w", encoding="utf-8") as f: f.write(default_content)
         except Exception: pass
 
-# 初始化 Session 狀態
+# 修正：確實初始化所有 session_state 變數，防止 AttributeError
+if "pomodoro_active" not in st.session_state: st.session_state.pomodoro_active = False
 if "hacker_simulator_unlocked" not in st.session_state: st.session_state.hacker_simulator_unlocked = False
 if "ppt_page" not in st.session_state: st.session_state.ppt_page = 0
 if "hacker_console_active" not in st.session_state: st.session_state.hacker_console_active = False
@@ -83,6 +84,7 @@ with st.sidebar:
     with pomo_col1:
         if st.button("🏁 啟動專注" if not st.session_state.pomodoro_active else "🛑 終止專注", key="sidebar_pomo_btn"):
             st.session_state.pomodoro_active = not st.session_state.pomodoro_active
+            st.rerun()
     with pomo_col2:
         st.write("🟢 專注中..." if st.session_state.pomodoro_active else "⚪ 待命")
         
@@ -312,7 +314,6 @@ if is_hacker and st.session_state.hacker_console_active:
                         ctx.fillStyle = '#020b08'; ctx.fillRect(0,0,canvas.width,canvas.height);
                         let cx = canvas.width / 2; let cy = canvas.height / 2;
                         
-                        // 背景戰略綠網格
                         ctx.strokeStyle = 'rgba(0, 68, 17, 0.25)'; ctx.lineWidth = 1;
                         for(let i=0; i<canvas.width; i+=40) {{ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }}
                         for(let j=0; j<canvas.height; j+=40) {{ ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }}
@@ -320,19 +321,15 @@ if is_hacker and st.session_state.hacker_console_active:
                         t += 0.8;
                         wavePhase += 0.15;
                         
-                        // 1. 搜尋鎖定與波形建立階段 (t < 100)
                         if(t < 100) {{
                             let scale = 1.0 + Math.sin(t/5)*0.2;
                             
-                            // 掃描卡尺圈
                             ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 1.5;
                             ctx.beginPath(); ctx.arc(cx, cy, 70 * scale, 0, Math.PI*2); ctx.stroke();
                             
-                            // 雷達轉動扇面
                             ctx.fillStyle = 'rgba(0,255,102,0.06)';
                             ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy, 100, t/10, t/10 + 0.6); ctx.closePath(); ctx.fill();
                             
-                            // 繪製動態調頻通訊波形 (下方)
                             ctx.strokeStyle = 'rgba(0, 255, 102, 0.5)'; ctx.lineWidth = 1;
                             ctx.beginPath();
                             for(let x=20; x<220; x++) {{
@@ -341,7 +338,6 @@ if is_hacker and st.session_state.hacker_console_active:
                             }}
                             ctx.stroke();
                             
-                            // 浮動文字資訊
                             ctx.fillStyle = '#00ff66'; ctx.font = '12px monospace'; ctx.textAlign='left';
                             ctx.fillText("📡 UPLINK STATUS: STAGE 1 (TUNING...)", 20, 30);
                             ctx.fillText("⚡ SIGNAL BEAM POWER: " + t.toFixed(0) + "%", 20, 50);
@@ -351,19 +347,15 @@ if is_hacker and st.session_state.hacker_console_active:
                             ctx.fillText("TARGET LOCKING >> " + target.toUpperCase(), canvas.width - 20, 30);
                             ctx.fillText("AZIMUTH: " + (t*3.6).toFixed(1) + "°", canvas.width - 20, 50);
                         }} 
-                        // 2. 覆寫成功：切換至戰略相機視野 (t >= 100)
                         else {{
-                            // 外框紅化加粗鎖定
                             ctx.strokeStyle = '#ff0033'; ctx.lineWidth = 3;
                             ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
                             
-                            // 軍用鏡頭十字瞄準格線
                             ctx.strokeStyle = 'rgba(255, 0, 51, 0.35)'; ctx.lineWidth = 1;
                             ctx.beginPath(); ctx.moveTo(cx - 150, cy); ctx.lineTo(cx + 150, cy); ctx.moveTo(cx, cy - 90); ctx.lineTo(cx, cy + 90); ctx.stroke();
                             ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.stroke();
                             ctx.beginPath(); ctx.arc(cx, cy, 75, 0, Math.PI*2); ctx.stroke();
                             
-                            // 四角科技感截角
                             let size = 20;
                             ctx.strokeStyle = '#ff0033'; ctx.lineWidth = 2;
                             ctx.beginPath(); ctx.moveTo(cx-100, cy-60+size); ctx.lineTo(cx-100, cy-60); ctx.lineTo(cx-100+size, cy-60); ctx.stroke();
@@ -371,12 +363,10 @@ if is_hacker and st.session_state.hacker_console_active:
                             ctx.beginPath(); ctx.moveTo(cx-100, cy+60-size); ctx.lineTo(cx-100, cy+60); ctx.lineTo(cx-100+size, cy+60); ctx.stroke();
                             ctx.beginPath(); ctx.moveTo(cx+100, cy+60-size); ctx.lineTo(cx+100, cy+60); ctx.lineTo(cx+100-size, cy+60); ctx.stroke();
 
-                            // 模擬動態熱點（畫幾個代表建築物、道路矩陣的虛線紅框）
                             ctx.strokeStyle = 'rgba(255, 51, 51, 0.5)';
                             ctx.strokeRect(cx - 60, cy - 40, 40, 25);
                             ctx.strokeRect(cx + 30, cy + 15, 50, 30);
                             
-                            // 頂部與底部狀態條
                             ctx.fillStyle = '#ff0033'; ctx.font = 'bold 13px monospace'; ctx.textAlign='left';
                             ctx.fillText("🔒 [OVERRIDE COMPLETE: CAPTURING LIVE FEED]", 25, 35);
                             ctx.font = '12px monospace';
